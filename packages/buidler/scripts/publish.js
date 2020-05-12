@@ -2,6 +2,7 @@ const fs = require('fs');
 const chalk = require('chalk');
 const bre = require("@nomiclabs/buidler");
 const contractDir = "./contracts"
+
 async function main() {
   const publishDir = "../react-app/src/contracts"
   if (!fs.existsSync(publishDir)){

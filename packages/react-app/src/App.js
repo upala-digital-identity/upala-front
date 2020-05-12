@@ -8,6 +8,7 @@ import { useExchangePrice, useGasPrice } from "./hooks"
 import { Header, Account, Provider, Faucet } from "./components"
 
 import SmartContractWallet from './SmartContractWallet.js'
+import Welcome from './Welcome.js'
 
 const mainnetProvider = new ethers.providers.InfuraProvider("mainnet","2717afb6bf164045b5d5468031b93f87")
 const localProvider = new ethers.providers.JsonRpcProvider(process.env.REACT_APP_PROVIDER?process.env.REACT_APP_PROVIDER:"http://localhost:8545")
@@ -41,7 +42,18 @@ function App() {
           price={price}
           gasPrice={gasPrice}
         />
+
+        <Welcome
+          address={address}
+          injectedProvider={injectedProvider}
+          localProvider={localProvider}
+          price={price}
+          gasPrice={gasPrice}
+        />
+
+
       </div>
+      
       <div style={{position:'fixed',textAlign:'right',right:0,bottom:20,padding:10}}>
         <div style={{padding:8}}>
           <Provider name={"mainnet"} provider={mainnetProvider} />
@@ -53,6 +65,7 @@ function App() {
           <Provider name={"injected"} provider={injectedProvider} />
         </div>
       </div>
+
       <div style={{position:'fixed',textAlign:'left',left:0,bottom:0,padding:10}}>
         <Faucet
           localProvider={localProvider}

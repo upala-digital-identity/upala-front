@@ -16,6 +16,7 @@ export default function SmartContractWallet(props) {
   const tx = Transactor(props.injectedProvider,props.gasPrice)
 
   const localBlockNumber = useBlockNumber(props.localProvider)
+  console.log("localBlockNumber", props.localProvider)
   const localBalance = useBalance(props.address,props.localProvider)
 
   const readContracts = useContractLoader(props.localProvider);
