@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React from 'react'
 import { PageHeader } from 'antd';
 
 export default function Header(props) {
@@ -9,6 +9,7 @@ export default function Header(props) {
       <PageHeader
         title="🏗 scaffold-eth"
         subTitle="forkable Ethereum dev stack focused on fast product iteration"
+        style={{cursor:'pointer'}}
       />
     </div>
   );
