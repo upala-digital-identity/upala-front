@@ -23,12 +23,14 @@ export default function useContractReader(contracts,contractName,functionName,ar
           //console.log("contractName",contractName,"functionName",functionName,"args",args,"RESULT:",newValue)
         }else{
           newValue = await contracts[contractName][functionName]()
+          
         }
         //console.log("GOT VALUE",newValue)
         if(newValue!=value){
           setValue(newValue)
         }
       }catch(e){
+        console.log("debug contractName, functionName", contractName, functionName);
         console.log(e)
       }
     }

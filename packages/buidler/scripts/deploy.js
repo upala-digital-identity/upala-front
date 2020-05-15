@@ -4,10 +4,11 @@ const chalk = require('chalk');
 async function main() {
 
   console.log("📡 Deploy \n")
-  let contractList = fs.readdirSync("./contracts")
+  // let contractList = fs.readdirSync("./contracts")
 
   async function deployContract(contactName, ...args) {
     const contractArtifacts = artifacts.require(contactName);
+    console.log("artifacts"+artifacts)
     console.log("📄 "+contactName)
     const contract = await contractArtifacts.new(...args)
     console.log(chalk.cyan(contactName),"deployed to:", chalk.magenta(contract.address));

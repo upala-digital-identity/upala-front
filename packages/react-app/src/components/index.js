@@ -5,5 +5,5 @@ export { default as Provider } from './Provider.js'
 export { default as Ramp } from './Ramp.js'
 export { default as Faucet } from './Faucet.js'
 
-export { default as Header } from './Header.js'
+export { default as Logo } from './Logo.js'
 export { default as Timeline } from './Timeline.js'

@@ -18,10 +18,13 @@ export default function Welcome(props) {
   const writeContracts = useContractLoader(props.injectedProvider);
 
 
-  const savedMsgSender =  useContractReader(readContracts,upalaContractName,"savedMsgSender",1777);
-  console.log("savedMsgSender", savedMsgSender);
+  // const savedMsgSender =  useContractReader(readContracts,upalaContractName,"savedMsgSender",1777);
+  // console.log("savedMsgSender", savedMsgSender);
 
   const contractLoaded = readContracts && readContracts[upalaContractName];
+  if (contractLoaded) {
+    console.log("readContracts[contractName].address", readContracts[upalaContractName].address);
+  }
 
   return (
     <div>
