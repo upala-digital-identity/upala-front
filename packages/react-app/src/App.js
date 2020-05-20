@@ -20,53 +20,75 @@ const mainnetProvider = new ethers.providers.InfuraProvider("mainnet","2717afb6b
 const localProvider = new ethers.providers.JsonRpcProvider(process.env.REACT_APP_PROVIDER?process.env.REACT_APP_PROVIDER:"http://localhost:8545")
 
 function App() {
+  const membership_status = {
+    "NO_MEMBERSHIP": "NO_MEMBERSHIP",
+    "PENDING_JOIN": "PENDING_JOIN", 
+    "PENDING_LEAVE": "PENDING_LEAVE", 
+    "JOINED": "JOINED"
+  }
 
   const [address, setAddress] = useState();
   const [injectedProvider, setInjectedProvider] = useState();
   const [activeGroupID, setactiveGroupID] = useState(0);
   const price = useExchangePrice(mainnetProvider)
   const gasPrice = useGasPrice("fast")
-
   const [pendingGroups, setPendingGroups] = useState([]);
-
-  // let pendingGroups = []
-  let groupSuggestions = [];
-  let joinedGroups = [];
 
 
   // test-data
-  const tempActiveGroupID1 = 12345;
-  const tempActiveGroupID2 = 435465;
-  const tempActiveGroupID3 = 234634;
-  const loadedGroups = {
+  const tempActiveGroupID1 = 111111;
+  const tempActiveGroupID2 = 222222;
+  const tempActiveGroupID3 = 333333;
+  const tempActiveGroupID4 = 444444;
+
+  const [loadedGroups, setLoadedGroups] = useState({
     [tempActiveGroupID1]: 
       { 
         "groupID": tempActiveGroupID1,
         "title": 'Group 1',
+        "membership_status": membership_status.NO_MEMBERSHIP,
       },
     [tempActiveGroupID2]:
       {
         "groupID": tempActiveGroupID2,
         "title": 'Group 2',
+        "membership_status": membership_status.NO_MEMBERSHIP,
       },
     [tempActiveGroupID3]:
       {
         "groupID": tempActiveGroupID3,
         "title": 'Group 3',
+        "membership_status": membership_status.NO_MEMBERSHIP,
       },
-  }
+  })
+
+
+
+  // let pendingGroups = []
+  let groupSuggestions = [];
+  let joinedGroups = [];
+
   for(let key in loadedGroups){
     groupSuggestions.push(key);
   } 
   //end-test-data
 
-  
-  
 
   function joinGroup(groupID) {
-    setPendingGroups(pendingGroups => [...pendingGroups, groupID]);
-    console.log(pendingGroups);
+    let newGroups = loadedGroups;
+    if (typeof newGroups[groupID] !== 'undefined' 
+          && 
+        typeof newGroups[groupID].membership_status !== 'undefined') {
+          setLoadedGroups((loadedGroups) => {
+            console.log(loadedGroups);
+            let newGroups = Object.assign({}, loadedGroups);
+            newGroups[groupID].membership_status = membership_status.PENDING_JOIN;
+            console.log(newGroups[groupID].membership_status);
+            //candidate.push(loadedGroups);
+            return newGroups;})
+          }
   }
+
 
   return (
     <div className="App">
@@ -88,15 +110,15 @@ function App() {
       Suggestions:
       <Groups
         loadedGroups={loadedGroups}
-        groupsList={groupSuggestions}
         setactiveGroupID={setactiveGroupID}
+        statusFilter={membership_status.NO_MEMBERSHIP}
       />
 
 
       Pending:
       <Groups
         loadedGroups={loadedGroups}
-        groupsList={pendingGroups}
+        statusFilter={membership_status.PENDING_JOIN}
         setactiveGroupID={setactiveGroupID}
       />
 
@@ -105,7 +127,7 @@ function App() {
         Pending: {pendingGroups}
         <a onClick={() => joinGroup(activeGroupID)}>Join</a>
       </div>
-
+      
       
       {/* <div style={{padding:40,textAlign: "left"}}>
         <Welcome

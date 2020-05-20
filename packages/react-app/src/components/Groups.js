@@ -4,20 +4,16 @@ import { List, Avatar } from 'antd';
 export default function Groups(props) {
 
   let loadedGroups = props.loadedGroups;
-  let groupsList = props.groupsList;
-  //const hasItems = groupsList.length > 0;
+  let statusFilter = props.statusFilter;
 
   let selectedGroups = [];
-  
-  for(let id in groupsList){
-    if (typeof loadedGroups[groupsList[id]] !== 'undefined' 
-        && 
-        typeof loadedGroups[groupsList[id]].title !== 'undefined') 
-        {           
-        selectedGroups.push(loadedGroups[groupsList[id]]);
-        }
+  for(let id in loadedGroups){
+    if (loadedGroups[id].membership_status == statusFilter) {
+      selectedGroups.push(loadedGroups[id]);
+    }
   }
-  
+
+
   if (selectedGroups) {
     return (
       <div>
