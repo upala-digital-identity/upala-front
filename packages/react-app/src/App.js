@@ -14,6 +14,7 @@ import { useExchangePrice, useGasPrice } from "./hooks"
 import { Logo, Account, Provider, Faucet, Ramp } from "./components"
 import Groups from "./components/Groups.js"
 import Details from "./components/Details.js"
+import GroupsReader from "./GroupsReader.js"
 import Welcome from './Welcome.js'
 
 const { Header, Footer, Sider, Content } = Layout;
@@ -69,7 +70,7 @@ function App() {
     <div className="App">
       <header>
         <Logo />
-        {/* <div style={{position:'fixed',textAlign:'right',right:0,top:0,padding:10}}>
+        <div style={{position:'fixed',textAlign:'right',right:0,top:0,padding:10}}>
           <Account
             address={address}
             setAddress={setAddress}
@@ -79,8 +80,9 @@ function App() {
             mainnetProvider={mainnetProvider}
             price={price}
           />
-        </div> */}
+        </div>
       </header>
+
       <div>
         <div className="menu">
           <h2>Membership</h2>
@@ -99,29 +101,37 @@ function App() {
           />
         </div>
         <div>
-        <Details
-          activeGroupID={activeGroupID}
-          loadedGroups={loadedGroups}
-          setLoadedGroups={setLoadedGroups}
-        />
+          <Details
+            activeGroupID={activeGroupID}
+            loadedGroups={loadedGroups}
+            setLoadedGroups={setLoadedGroups}
+          />
+        </div>
+
+        <div>
+          <GroupsReader
+            localProvider={localProvider}
+          />
+          
+          <div>
+            <Welcome
+              address={address}
+              injectedProvider={injectedProvider}
+              localProvider={localProvider}
+              price={price}
+              gasPrice={gasPrice}
+            />
+          </div>
         </div>
       </div>
       
       
-      {/* <div style={{padding:40,textAlign: "left"}}>
-        <Welcome
-          address={address}
-          injectedProvider={injectedProvider}
-          localProvider={localProvider}
-          price={price}
-          gasPrice={gasPrice}
-        />
-      </div> */}
+      
     
 
 
         
-      {/* <div style={{position:'fixed',textAlign:'right',right:0,bottom:20,padding:10}}>
+      <div style={{position:'fixed',textAlign:'right',right:0,bottom:20,padding:10}}>
         <Row align="middle" gutter={4}>
           <Col span={10}>
             <Provider name={"mainnet"} provider={mainnetProvider} />
@@ -150,7 +160,7 @@ function App() {
             />
           </Col>
         </Row>
-      </div> */}
+      </div>
      
     </div>
   );

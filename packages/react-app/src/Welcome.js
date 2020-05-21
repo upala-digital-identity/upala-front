@@ -28,32 +28,19 @@ export default function Welcome(props) {
 
   return (
     <div>
-      <Card
-        title="Welocome screen"
-        size="large"
-        style={{ width: 550, marginTop: 25 }}
-        loading={!contractLoaded}
 
-        actions={[
-            <div onClick={()=>{
+      <a onClick={()=>{
               tx(
                 writeContracts[upalaContractName]
                   .newIdentity(props.address, { gasLimit: ethers.utils.hexlify(400000) })
                 )
-            }}>
-              <UploadOutlined /> New Identity
-            </div>,
+            }}>New Identity</a> <br />
 
-            <div onClick={()=>{
+      <a onClick={()=>{
               readContracts[upalaContractName].myId({ from: props.address }).then((result) => {
                 console.log("myId button result", result.toNumber());
               });
-            }}>
-              <DownloadOutlined /> My Id
-            </div>,
-        ]}>
-
-      </Card>
+            }}>My Id</a>
 
     </div>
   );
