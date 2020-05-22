@@ -20,10 +20,10 @@ export default function useContractReader(contracts,contractName,functionName,ar
         //console.log("CALLING ",contractName,functionName, "with args", args)
         if(args&&args.length > 0){
           newValue = await contracts[contractName][functionName](...args)
-          //console.log("contractName",contractName,"functionName",functionName,"args",args,"RESULT:",newValue)
+          //console.log("ARGS",contractName,"functionName",functionName,"args",args,"RESULT:",newValue)
         }else{
           newValue = await contracts[contractName][functionName]()
-          
+          //console.log("ARGS",contractName,"functionName",functionName,"args",args,"RESULT:",newValue)
         }
         //console.log("GOT VALUE",newValue)
         if(newValue!=value){

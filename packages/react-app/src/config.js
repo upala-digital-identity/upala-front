@@ -5,3 +5,4 @@ export const membership_status =
         "PENDING_LEAVE": "PENDING_LEAVE", 
         "JOINED": "JOINED"
     }
+export const upalaContractName = "Upala"

@@ -30,6 +30,7 @@ function App() {
   const price = useExchangePrice(mainnetProvider)
   const gasPrice = useGasPrice("fast")
   const [pendingGroups, setPendingGroups] = useState([]);
+  const [userUpalaId, setUserUpalaId] = useState();
 
 
   // test-data
@@ -105,13 +106,21 @@ function App() {
             activeGroupID={activeGroupID}
             loadedGroups={loadedGroups}
             setLoadedGroups={setLoadedGroups}
+            userUpalaId={userUpalaId}
+
+            address={address}
+            injectedProvider={injectedProvider}
+            localProvider={localProvider}
+            gasPrice={gasPrice}
           />
         </div>
 
         <div>
-          <GroupsReader
-            localProvider={localProvider}
-          />
+            <GroupsReader
+              localProvider={localProvider}
+              loadedGroups={loadedGroups}
+              setLoadedGroups={setLoadedGroups}
+            />
           
           <div>
             <Welcome
@@ -120,6 +129,8 @@ function App() {
               localProvider={localProvider}
               price={price}
               gasPrice={gasPrice}
+              userUpalaId={userUpalaId}
+              setUserUpalaId={setUserUpalaId}
             />
           </div>
         </div>
@@ -127,9 +138,6 @@ function App() {
       
       
       
-    
-
-
         
       <div style={{position:'fixed',textAlign:'right',right:0,bottom:20,padding:10}}>
         <Row align="middle" gutter={4}>

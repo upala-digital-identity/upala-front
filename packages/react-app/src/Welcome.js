@@ -1,13 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React from 'react'
 import { ethers } from "ethers";
-import Blockies from 'react-blockies';
-import { Typography, Skeleton, Card, Row, Col, Button, List } from 'antd';
-import { DownloadOutlined, UploadOutlined } from '@ant-design/icons';
-import { useContractLoader, useContractReader, useEventListener, useBlockNumber, useBalance } from "./hooks"
+import { useContractLoader, useContractReader } from "./hooks"
 import { Transactor } from "./helpers"
-import { Address, Balance, Timeline } from "./components"
-const { Title } = Typography;
-const { Meta } = Card;
+
 
 const upalaContractName = "Upala"
 
@@ -17,30 +12,46 @@ export default function Welcome(props) {
   const readContracts = useContractLoader(props.localProvider);
   const writeContracts = useContractLoader(props.injectedProvider);
 
+  const userUpalaId = props.userUpalaId;
+  const setUserUpalaId = props.setUserUpalaId
 
-  // const savedMsgSender =  useContractReader(readContracts,upalaContractName,"savedMsgSender",1777);
-  // console.log("savedMsgSender", savedMsgSender);
+  const userUpalaIdRaw = useContractReader(readContracts,upalaContractName,"myId",[{ from: props.address }],1777);
+  
+  // setting Id for the first time
+  if (!userUpalaId && userUpalaIdRaw) {
+    setUserUpalaId(userUpalaIdRaw.toNumber());
+    console.log("Setting userUpalaId", userUpalaIdRaw.toNumber());
+  }
 
-  const contractLoaded = readContracts && readContracts[upalaContractName];
-  if (contractLoaded) {
-    console.log("readContracts[contractName].address", readContracts[upalaContractName].address);
+  // reseting ID TODO remove in production.
+  if (userUpalaId && userUpalaIdRaw) {
+    if (userUpalaId != userUpalaIdRaw.toNumber()) {
+      setUserUpalaId(userUpalaIdRaw.toNumber());
+      console.log("Setting userUpalaId", userUpalaIdRaw.toNumber());
+    }
+  }
+
+  let displayUserID = "Is not registered";
+  if (userUpalaId) {
+    displayUserID = userUpalaId;
   }
 
   return (
     <div>
+      Your Upala Id is: <h1>{displayUserID}</h1>
 
       <a onClick={()=>{
               tx(
                 writeContracts[upalaContractName]
                   .newIdentity(props.address, { gasLimit: ethers.utils.hexlify(400000) })
                 )
-            }}>New Identity</a> <br />
+            }}>Register new Upala Id</a> <br />
 
-      <a onClick={()=>{
+      {/* <a onClick={()=>{
               readContracts[upalaContractName].myId({ from: props.address }).then((result) => {
                 console.log("myId button result", result.toNumber());
               });
-            }}>My Id</a>
+            }}>My Id</a> */}
 
     </div>
   );
