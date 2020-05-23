@@ -34,7 +34,10 @@ export default function Welcome(props) {
   let displayUserID = "Is not registered";
   if (userUpalaId) {
     displayUserID = userUpalaId;
+    console.log("displayUserID", displayUserID)
   }
+
+
 
   return (
     <div>

@@ -11,7 +11,8 @@ export default function GroupsReader(props) {
 
   const loadedGroups=props.loadedGroups;
   const setLoadedGroups=props.setLoadedGroups;
-
+  const userUpalaId = props.userUpalaId;
+  
   const readContracts = useContractLoader(props.localProvider);
 
   const details = useContractReader(readContracts,groupContractName,"getGroupDetails",1777);
@@ -25,8 +26,7 @@ export default function GroupsReader(props) {
   
   let manager_address = readContracts?readContracts[groupContractName].address:""
 
-  // const groupIDTemp = 3;
-  // add group once
+  // First load group
   if (upalaGroupID && details && manager_address && !loadedGroups[upalaGroupID]) {
     console.log("Loading ProtoGroup");
     let newEntry ={
@@ -34,7 +34,8 @@ export default function GroupsReader(props) {
       "title": groupContractName,
       "membership_status": membership_status.NO_MEMBERSHIP,
       "details": details,
-      "manager_address": manager_address
+      "manager_address": manager_address,
+      "user_score": 0,
     }
 
     setLoadedGroups((loadedGroups) => {
@@ -43,7 +44,36 @@ export default function GroupsReader(props) {
       return newGroups;})
   }
 
+  if (upalaGroupID && userUpalaId) {
+    let path1 = [userUpalaId, upalaGroupID];
+    
+    readContracts[upalaContractName].memberScore(path1, { from: props.address }).then((result) => {
+      let newUserScore = ethers.utils.formatEther(result);
+      console.log("memberScore  ", newUserScore);
+      
+      let updateNeeded = false;
+      if (loadedGroups[upalaGroupID].user_score > 0 && loadedGroups[upalaGroupID].user_score != membership_status.JOINED) {
+        updateNeeded = true;
+      }
+
+      if (loadedGroups[upalaGroupID].user_score != newUserScore) {
+        updateNeeded = true;
+      }
+
+      if (updateNeeded) {
+        setLoadedGroups((loadedGroups) => {
+          let newGroups = Object.assign({}, loadedGroups);
+          newGroups[upalaGroupID].membership_status = membership_status.JOINED;
+          newGroups[upalaGroupID].user_score = newUserScore;
+          console.log("user_score newGroups", newGroups);
+          return newGroups;
+        })
+      }
+    });
+
+  }
   
+
   let displayDetails, displayContractAddress, displayUpalaGroupID;
 
   if(readContracts && readContracts[groupContractName]){

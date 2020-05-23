@@ -7,8 +7,9 @@ import { usePoller } from "../hooks"
 import WalletConnectProvider from "@walletconnect/web3-provider";
 import { Button, Typography } from 'antd';
 const { Text } = Typography;
+const secrets = require("../secrets.js");
 
-const INFURA_ID = "2717afb6bf164045b5d5468031b93f87"  // MY INFURA_ID, SWAP IN YOURS!
+const INFURA_ID = secrets.infura_project_id;
 
 const web3Modal = new Web3Modal({
   //network: "mainnet", // optional

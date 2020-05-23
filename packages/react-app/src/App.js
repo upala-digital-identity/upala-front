@@ -19,7 +19,13 @@ import Welcome from './Welcome.js'
 
 const { Header, Footer, Sider, Content } = Layout;
 
-const mainnetProvider = new ethers.providers.InfuraProvider("mainnet","2717afb6bf164045b5d5468031b93f87")
+const IS_SHIPPED = true;
+
+const secrets = require("./secrets.js");
+const INFURA_ID = secrets.infura_project_id;
+
+// mainnetProvider is used for price discovery
+const mainnetProvider = new ethers.providers.InfuraProvider("mainnet",INFURA_ID)
 const localProvider = new ethers.providers.JsonRpcProvider(process.env.REACT_APP_PROVIDER?process.env.REACT_APP_PROVIDER:"http://localhost:8545")
 
 function App() {
@@ -27,9 +33,8 @@ function App() {
   const [address, setAddress] = useState();
   const [injectedProvider, setInjectedProvider] = useState();
   const [activeGroupID, setactiveGroupID] = useState();
-  const price = useExchangePrice(mainnetProvider)
+  const price = useExchangePrice(mainnetProvider);
   const gasPrice = useGasPrice("fast")
-  const [pendingGroups, setPendingGroups] = useState([]);
   const [userUpalaId, setUserUpalaId] = useState();
 
 
@@ -38,6 +43,7 @@ function App() {
   const tempActiveGroupID2 = 222222;
   const tempActiveGroupID3 = 333333;
 
+  // one "real" group is added to this list after reading smart-contracts
   const [loadedGroups, setLoadedGroups] = useState({
     [tempActiveGroupID1]: 
       { 
@@ -45,7 +51,7 @@ function App() {
         "title": 'Group 1',
         "membership_status": membership_status.NO_MEMBERSHIP,
         "details": "Group 1 details",
-        "manager_address": "0x111bbfbff01c50f2d42d542b09637dca97935ff7"
+        "manager_address": "0x0"
       },
     [tempActiveGroupID2]:
       {
@@ -53,7 +59,7 @@ function App() {
         "title": 'Group 2',
         "membership_status": membership_status.NO_MEMBERSHIP,
         "details": "Group 2 details",
-        "manager_address": "0x222bbfbff01c50f2d42d542b09637dca97935ff7"
+        "manager_address": "0x0"
       },
     [tempActiveGroupID3]:
       {
@@ -61,7 +67,7 @@ function App() {
         "title": 'Group 3',
         "membership_status": membership_status.NO_MEMBERSHIP,
         "details": "Group 3 details",
-        "manager_address": "0x333bbfbff01c50f2d42d542b09637dca97935ff7"
+        "manager_address": "0x0"
       },
   })
 
@@ -100,6 +106,14 @@ function App() {
             statusFilter={membership_status.PENDING_JOIN}
             setactiveGroupID={setactiveGroupID}
           />
+
+          <h3>Joined:</h3>
+          <Groups
+            loadedGroups={loadedGroups}
+            statusFilter={membership_status.JOINED}
+            setactiveGroupID={setactiveGroupID}
+          />
+
         </div>
         <div>
           <Details
@@ -110,14 +124,16 @@ function App() {
 
             address={address}
             injectedProvider={injectedProvider}
-            localProvider={localProvider}
+            localProvider={IS_SHIPPED ? injectedProvider : localProvider}
             gasPrice={gasPrice}
           />
         </div>
 
         <div>
             <GroupsReader
-              localProvider={localProvider}
+              localProvider={IS_SHIPPED ? injectedProvider : localProvider}
+              address={address}
+              userUpalaId={userUpalaId}
               loadedGroups={loadedGroups}
               setLoadedGroups={setLoadedGroups}
             />
@@ -126,7 +142,7 @@ function App() {
             <Welcome
               address={address}
               injectedProvider={injectedProvider}
-              localProvider={localProvider}
+              localProvider={IS_SHIPPED ? injectedProvider : localProvider}
               price={price}
               gasPrice={gasPrice}
               userUpalaId={userUpalaId}

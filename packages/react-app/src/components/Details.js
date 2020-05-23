@@ -27,6 +27,13 @@ export default function Details(props) {
             newGroups[groupID].membership_status = membership_status.PENDING_JOIN;
             return newGroups;})
           }
+    if (newGroups[groupID].manager_address != "0x0") {
+      console.log("writeContracts[loadedGroups");
+      tx(
+        writeContracts[loadedGroups[activeGroupID].title].
+          join(userUpalaId, { gasLimit: ethers.utils.hexlify(400000) })
+        )
+    }
   }
 
   if (activeGroupID) {
@@ -38,14 +45,11 @@ export default function Details(props) {
         <b>membership_status:</b> {loadedGroups[activeGroupID].membership_status} <br />
         <b>details:</b> {loadedGroups[activeGroupID].details} <br />
         <b>manager_address:</b> {loadedGroups[activeGroupID].manager_address} <br />
-        <a onClick={() => joinGroup(activeGroupID)}>Join</a>
-        <a onClick={()=>{
+        <a onClick={() => joinGroup(activeGroupID)}>Join</a> <br />
+        {/* <a onClick={()=>{
           // join(uint160 identityID)
-          tx(
-            writeContracts[loadedGroups[activeGroupID].title].
-              join(userUpalaId, { gasLimit: ethers.utils.hexlify(400000) })
-            )
-          }}>Join Protogroup</a> <br />
+          
+          }}>Join Protogroup</a> <br /> */}
       </div>
 
     )
