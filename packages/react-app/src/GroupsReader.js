@@ -44,10 +44,11 @@ export default function GroupsReader(props) {
       return newGroups;})
   }
 
-  if (upalaGroupID && userUpalaId) {
-    let path1 = [userUpalaId, upalaGroupID];
+  if (loadedGroups[upalaGroupID] && userUpalaId && loadedGroups[upalaGroupID].membership_status == membership_status.PENDING_JOIN) {
     
-    readContracts[upalaContractName].memberScore(path1, { from: props.address }).then((result) => {
+    let path = [userUpalaId, upalaGroupID];
+    
+    readContracts[upalaContractName].memberScore(path, { from: props.address }).then((result) => {
       let newUserScore = ethers.utils.formatEther(result);
       console.log("memberScore  ", newUserScore);
       
@@ -65,6 +66,7 @@ export default function GroupsReader(props) {
           let newGroups = Object.assign({}, loadedGroups);
           newGroups[upalaGroupID].membership_status = membership_status.JOINED;
           newGroups[upalaGroupID].user_score = newUserScore;
+          newGroups[upalaGroupID].path = path;
           console.log("user_score newGroups", newGroups);
           return newGroups;
         })
