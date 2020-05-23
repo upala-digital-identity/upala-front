@@ -34,7 +34,8 @@ const testData = {
       "title": 'Group 1',
       "membership_status": membership_status.NO_MEMBERSHIP,
       "details": "Group 1 details",
-      "manager_address": "0x0"
+      "manager_address": "0x0",
+      "user_score": null
     },
   [tempActiveGroupID2]:
     {
@@ -42,7 +43,8 @@ const testData = {
       "title": 'Group 2',
       "membership_status": membership_status.NO_MEMBERSHIP,
       "details": "Group 2 details",
-      "manager_address": "0x0"
+      "manager_address": "0x0",
+      "user_score": null
     },
   [tempActiveGroupID3]:
     {
@@ -50,7 +52,8 @@ const testData = {
       "title": 'Group 3',
       "membership_status": membership_status.NO_MEMBERSHIP,
       "details": "Group 3 details",
-      "manager_address": "0x0"
+      "manager_address": "0x0",
+      "user_score": null
     },
 }
 

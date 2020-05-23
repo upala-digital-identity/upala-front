@@ -41,6 +41,11 @@ export default function Welcome(props) {
 
   return (
     <div>
+      <br />
+      <br />
+      <br />
+      <br />
+      <h1>🔵</h1> 
       Your Upala Id is: <h1>{displayUserID}</h1>
 
       <a onClick={()=>{
