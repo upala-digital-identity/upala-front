@@ -67,6 +67,7 @@ function App() {
   const [userUpalaId, setUserUpalaId] = useState();
   const [loadedGroups, setLoadedGroups] = useState(testData)
 
+  const [poolAddress_hack, setPoolAddress_hack] = useState()
 
   return (
     <div className="App">
@@ -74,6 +75,7 @@ function App() {
         <Logo />
         <div style={{position:'fixed',textAlign:'right',right:0,top:0,padding:10}}>
           <Account
+            poolAddress_hack={poolAddress_hack}
             address={address}
             setAddress={setAddress}
             localProvider={localProvider}
@@ -131,6 +133,7 @@ function App() {
               userUpalaId={userUpalaId}
               loadedGroups={loadedGroups}
               setLoadedGroups={setLoadedGroups}
+              setPoolAddress_hack={setPoolAddress_hack}
             />
           
           <div>

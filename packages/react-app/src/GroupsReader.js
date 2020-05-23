@@ -36,6 +36,7 @@ export default function GroupsReader(props) {
       "details": details,
       "manager_address": manager_address,
       "user_score": null,
+      "pool_address": null,
     }
 
     setLoadedGroups((loadedGroups) => {
@@ -43,6 +44,21 @@ export default function GroupsReader(props) {
       newGroups[upalaGroupID] = newEntry;
       return newGroups;})
   }
+
+  if (loadedGroups[upalaGroupID] && !loadedGroups[upalaGroupID].pool_address) {
+    readContracts[loadedGroups[upalaGroupID].title].getGroupPoolAddress().then((pool_address) => {
+      // console.log("getGroupPoolAddress", pool_address);
+      setLoadedGroups((loadedGroups) => {
+        let newGroups = Object.assign({}, loadedGroups);
+        newGroups[upalaGroupID].pool_address = pool_address;
+        console.log("Write pool address", newGroups);
+        return newGroups;
+      });
+      props.setPoolAddress_hack(pool_address);
+    });
+  }
+  
+
 
   // Update user_score
   if (loadedGroups[upalaGroupID] && userUpalaId) {

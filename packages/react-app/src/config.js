@@ -6,3 +6,4 @@ export const membership_status =
         "JOINED": "JOINED"
     }
 export const upalaContractName = "Upala"
+export const daiContractName = "FakeDai"

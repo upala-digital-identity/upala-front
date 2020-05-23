@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { ethers } from "ethers";
-import BurnerProvider from 'burner-provider';
+// import BurnerProvider from 'burner-provider';
 import Web3Modal from "web3modal";
 import { Balance, Address } from "."
 import { usePoller } from "../hooks"
+import { useContractLoader, useContractReader } from "../hooks"
+
 import WalletConnectProvider from "@walletconnect/web3-provider";
 import { Button, Typography } from 'antd';
+import { daiContractName } from "../config";
 const { Text } = Typography;
 const secrets = require("../secrets.js");
 
@@ -26,20 +29,20 @@ const web3Modal = new Web3Modal({
 
 export default function Account(props) {
 
-  const createBurnerIfNoAddress = () => {
-    if (!props.injectedProvider && props.localProvider){
-      if(props.localProvider.connection && props.localProvider.connection.url){
-        props.setInjectedProvider(new ethers.providers.Web3Provider(new BurnerProvider(props.localProvider.connection.url)))
-      }else if( props.localProvider._network && props.localProvider._network.name ){
-        props.setInjectedProvider(new ethers.providers.Web3Provider(new BurnerProvider("https://"+props.localProvider._network.name+".infura.io/v3/"+INFURA_ID)))
-      }else{
-        props.setInjectedProvider(new ethers.providers.Web3Provider(new BurnerProvider("https://mainnet.infura.io/v3/"+INFURA_ID)))
-      }
-    }else{
-      pollInjectedProvider()
-    }
-  }
-  useEffect(createBurnerIfNoAddress, [props.injectedProvider]);
+  // const createBurnerIfNoAddress = () => {
+  //   if (!props.injectedProvider && props.localProvider){
+  //     if(props.localProvider.connection && props.localProvider.connection.url){
+  //       props.setInjectedProvider(new ethers.providers.Web3Provider(new BurnerProvider(props.localProvider.connection.url)))
+  //     }else if( props.localProvider._network && props.localProvider._network.name ){
+  //       props.setInjectedProvider(new ethers.providers.Web3Provider(new BurnerProvider("https://"+props.localProvider._network.name+".infura.io/v3/"+INFURA_ID)))
+  //     }else{
+  //       props.setInjectedProvider(new ethers.providers.Web3Provider(new BurnerProvider("https://mainnet.infura.io/v3/"+INFURA_ID)))
+  //     }
+  //   }else{
+  //     pollInjectedProvider()
+  //   }
+  // }
+  // useEffect(createBurnerIfNoAddress, [props.injectedProvider]);
 
   const pollInjectedProvider = async ()=>{
     if(props.injectedProvider){
@@ -84,8 +87,19 @@ export default function Account(props) {
     }
   }, []);
 
+
+  const readContracts = useContractLoader(props.localProvider);
+
+  const poolBalance = useContractReader(readContracts,daiContractName,"balanceOf",[props.poolAddress_hack],5000);
+  const userBalance = useContractReader(readContracts,daiContractName,"balanceOf",[props.address],5000);
+
+  let displayPoolBalance = poolBalance?ethers.utils.formatEther(poolBalance):"Loading...";
+  let displayUserBalance = userBalance?ethers.utils.formatEther(userBalance):"Loading...";
+  
   return (
     <div>
+      Pool balance: {displayPoolBalance} DAI Your balance: {displayUserBalance} DAI . . .
+      
       {props.address?(
         <Address value={props.address} ensProvider={props.mainnetProvider}/>
       ):"Connecting..."}
