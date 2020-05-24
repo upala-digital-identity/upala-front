@@ -35,7 +35,8 @@ const testData = {
       "membership_status": membership_status.NO_MEMBERSHIP,
       "details": "Group 1 details",
       "manager_address": "0x0",
-      "user_score": null
+      "user_score": null,
+      "short_description": "Not deployed"
     },
   [tempActiveGroupID2]:
     {
@@ -44,7 +45,8 @@ const testData = {
       "membership_status": membership_status.NO_MEMBERSHIP,
       "details": "Group 2 details",
       "manager_address": "0x0",
-      "user_score": null
+      "user_score": null,
+      "short_description": "Not deployed"
     },
   [tempActiveGroupID3]:
     {
@@ -53,7 +55,8 @@ const testData = {
       "membership_status": membership_status.NO_MEMBERSHIP,
       "details": "Group 3 details",
       "manager_address": "0x0",
-      "user_score": null
+      "user_score": null,
+      "short_description": "Not deployed"
     },
 }
 
@@ -78,7 +81,7 @@ function App() {
             poolAddress_hack={poolAddress_hack}
             address={address}
             setAddress={setAddress}
-            localProvider={localProvider}
+            localProvider={IS_SHIPPED ? injectedProvider : localProvider}
             injectedProvider={injectedProvider}
             setInjectedProvider={setInjectedProvider}
             mainnetProvider={mainnetProvider}
@@ -150,7 +153,7 @@ function App() {
         </div>
       </div>
       
-
+      { !IS_SHIPPED ? (
       <div style={{position:'fixed',textAlign:'left',left:0,bottom:20,padding:10}}>
         <Faucet
           localProvider={localProvider}
@@ -158,7 +161,8 @@ function App() {
         />
 
       </div>
-     
+      ) : ""
+      }
     </div>
   );
 }

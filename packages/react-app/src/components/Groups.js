@@ -23,9 +23,9 @@ export default function Groups(props) {
             renderItem={item => (
               <List.Item>
                 <List.Item.Meta
-                  avatar={<Avatar src="https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png" />}
+                  avatar={<Avatar src="https://i.imgur.com/SfYwuRJ.png" />}
                   title={<a onClick={() => props.setactiveGroupID(item.groupID)}>{item.title} </a>}
-                  description="Ant Design, a design language for background applications, is refined by Ant UED Team"
+                  description={ item.short_description }
                 />
               </List.Item>
             )}

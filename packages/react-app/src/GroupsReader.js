@@ -37,6 +37,7 @@ export default function GroupsReader(props) {
       "manager_address": manager_address,
       "user_score": null,
       "pool_address": null,
+      "short_description": "Deployed to Kovan"
     }
 
     setLoadedGroups((loadedGroups) => {

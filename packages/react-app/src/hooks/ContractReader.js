@@ -17,7 +17,7 @@ export default function useContractReader(contracts,contractName,functionName,ar
     if(contracts && contracts[contractName]){
       try{
         let newValue
-        //console.log("CALLING ",contractName,functionName, "with args", args)
+        // console.log("CALLING ",contractName,functionName, "with args", args)
         if(args&&args.length > 0){
           newValue = await contracts[contractName][functionName](...args)
           //console.log("ARGS",contractName,"functionName",functionName,"args",args,"RESULT:",newValue)
