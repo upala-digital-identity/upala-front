@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
+import Portis from "@portis/web3";
 import { ethers } from "ethers";
 // import BurnerProvider from 'burner-provider';
 import Web3Modal from "web3modal";
@@ -13,6 +14,7 @@ const { Text } = Typography;
 const secrets = require("../secrets.js");
 
 const INFURA_ID = secrets.infura_project_id;
+const PORTIS_ID = secrets.portisID;
 
 const web3Modal = new Web3Modal({
   //network: "mainnet", // optional
@@ -22,6 +24,13 @@ const web3Modal = new Web3Modal({
       package: WalletConnectProvider, // required
       options: {
         infuraId: INFURA_ID
+      }
+    },
+    portis: {
+      package: Portis, // required
+      options: {
+        id: PORTIS_ID, // required
+        network: "kovan"
       }
     }
   }

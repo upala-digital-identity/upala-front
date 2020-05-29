@@ -14,7 +14,7 @@ import GroupsReader from "./GroupsReader.js"
 import Welcome from './Welcome.js'
 
 
-const IS_SHIPPED = false;
+const IS_SHIPPED = true;
 
 const secrets = require("./secrets.js");
 const INFURA_ID = secrets.infura_project_id;
