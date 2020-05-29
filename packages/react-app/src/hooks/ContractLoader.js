@@ -1,4 +1,5 @@
 import { ethers } from "ethers";
+import { network } from "../config";
 import { useState, useEffect } from 'react';
 
 export default function useContractLoader(provider) {
@@ -8,9 +9,8 @@ export default function useContractLoader(provider) {
       if(typeof provider != "undefined")
       {
         try{
-          let contractList = require("../contracts/contracts.js")
+          let contractList = require("../contracts/" + network + "/contracts.js")
           let newContracts = []
-
           //we need to check to see if this provider has a signer or not
           let signer
           let accounts = await provider.listAccounts()
@@ -22,12 +22,12 @@ export default function useContractLoader(provider) {
 
           for(let c in contractList){
             newContracts[contractList[c]] = new ethers.Contract(
-              require("../contracts/"+contractList[c]+".address.js"),
-              require("../contracts/"+contractList[c]+".abi.js"),
+              require("../contracts/" + network + "/" + contractList[c]+".address.js"),
+              require("../contracts/" + network + "/" + contractList[c]+".abi.js"),
               signer,
             );
             try{
-              newContracts[contractList[c]].bytecode = require("../contracts/"+contractList[c]+".bytecode.js")
+              newContracts[contractList[c]].bytecode = require("../contracts/" + network + "/" + contractList[c]+".bytecode.js")
             }catch(e){
               console.log(e)
             }

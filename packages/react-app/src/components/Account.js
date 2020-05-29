@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
+import { network } from "../config";
 import Portis from "@portis/web3";
 import { ethers } from "ethers";
 // import BurnerProvider from 'burner-provider';
@@ -30,7 +31,7 @@ const web3Modal = new Web3Modal({
       package: Portis, // required
       options: {
         id: PORTIS_ID, // required
-        network: "kovan"
+        network: network
       }
     }
   }

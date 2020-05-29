@@ -7,3 +7,4 @@ export const membership_status =
     }
 export const upalaContractName = "Upala"
 export const daiContractName = "FakeDai"
+export const network = "kovan" // options: localhost, kovan

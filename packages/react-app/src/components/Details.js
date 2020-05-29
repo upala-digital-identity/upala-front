@@ -1,7 +1,7 @@
 import React from 'react';
 import { membership_status, upalaContractName } from "../config";
 import { ethers } from "ethers";
-import { useContractLoader, useContractReader, useEventListener, useBlockNumber, useBalance } from "../hooks"
+import { useContractLoader } from "../hooks"
 import { Transactor } from "../helpers"
 
 export default function Details(props) {
