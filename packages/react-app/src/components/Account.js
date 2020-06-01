@@ -1,21 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { network } from "../config";
+import { network, PORTIS_ID, INFURA_ID } from "../config";
 import Portis from "@portis/web3";
 import { ethers } from "ethers";
 // import BurnerProvider from 'burner-provider';
 import Web3Modal from "web3modal";
 import { Balance, Address } from "."
-import { usePoller } from "../hooks"
-import { useContractLoader, useContractReader } from "../hooks"
+import { usePoller, useContractLoader } from "../hooks"
+import { useContractReader } from "../hooks"
 
 import WalletConnectProvider from "@walletconnect/web3-provider";
 import { Button, Typography } from 'antd';
 import { daiContractName } from "../config";
-const { Text } = Typography;
-const secrets = require("../secrets.js");
 
-const INFURA_ID = secrets.infura_project_id;
-const PORTIS_ID = secrets.portisID;
 
 const web3Modal = new Web3Modal({
   //network: "mainnet", // optional
@@ -39,6 +35,7 @@ const web3Modal = new Web3Modal({
 
 export default function Account(props) {
 
+  // const readContracts = props.readContracts;
   // const createBurnerIfNoAddress = () => {
   //   if (!props.injectedProvider && props.localProvider){
   //     if(props.localProvider.connection && props.localProvider.connection.url){
@@ -96,7 +93,6 @@ export default function Account(props) {
       loadWeb3Modal()
     }
   }, []);
-
 
   const readContracts = useContractLoader(props.localProvider);
 

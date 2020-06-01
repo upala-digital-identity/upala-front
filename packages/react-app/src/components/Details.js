@@ -24,7 +24,7 @@ export default function Details(props) {
         && 
         typeof newGroups[groupID].membership_status !== 'undefined'
         && 
-        newGroups[groupID].manager_address == "0x0") 
+        newGroups[groupID].group_address == "0x0") 
         {
           // same as below!!! setLoadedGroups((loadedG...
           setLoadedGroups((loadedGroups) => {
@@ -35,7 +35,7 @@ export default function Details(props) {
           })
         }
 
-    if (newGroups[groupID].manager_address != "0x0") {
+    if (newGroups[groupID].group_address != "0x0") {
       console.log("writeContracts[loadedGroups");
       //tx(
         writeContracts[loadedGroups[activeGroupID].title].
@@ -61,7 +61,7 @@ export default function Details(props) {
         && 
         typeof newGroups[groupID].membership_status !== 'undefined'
         && 
-        newGroups[groupID].manager_address == "0x0")
+        newGroups[groupID].group_address == "0x0")
         {
           
           // same as below setLoadedGroups((loadedG...
@@ -73,7 +73,7 @@ export default function Details(props) {
           })
         }
 
-    if (newGroups[groupID].manager_address != "0x0") {
+    if (newGroups[groupID].group_address != "0x0") {
 
       // TODO check what is newGroups[groupID].membership_status here
 
@@ -126,7 +126,7 @@ export default function Details(props) {
         <b>groupID:</b> {loadedGroups[activeGroupID].groupID} <br />
         <b>membership_status:</b> {loadedGroups[activeGroupID].membership_status} <br />
         <b>details:</b> {loadedGroups[activeGroupID].details} <br />
-        <b>manager_address:</b> {loadedGroups[activeGroupID].manager_address} <br />
+        <b>group_address:</b> {loadedGroups[activeGroupID].group_address} <br />
         { displayLinks }
       </div>
 

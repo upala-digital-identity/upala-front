@@ -1,23 +1,17 @@
 import React, { useState } from 'react'
 import 'antd/dist/antd.css';
-import {membership_status} from "./config";
+import { membership_status, INFURA_ID, IS_SHIPPED } from "./config";
 //import { gql } from "apollo-boost";
 import { ethers } from "ethers";
 //import { useQuery } from "@apollo/react-hooks";
 import "./App.css";
-
-import { useExchangePrice, useGasPrice } from "./hooks"
+import { useExchangePrice, useGasPrice, useContractLoader } from "./hooks"
 import { Logo, Account, Provider, Faucet, Ramp } from "./components"
 import Groups from "./components/Groups.js"
 import Details from "./components/Details.js"
 import GroupsReader from "./GroupsReader.js"
 import Welcome from './Welcome.js'
 
-
-const IS_SHIPPED = true;
-
-const secrets = require("./secrets.js");
-const INFURA_ID = secrets.infura_project_id;
 
 // mainnetProvider is used for price discovery
 const mainnetProvider = new ethers.providers.InfuraProvider("mainnet",INFURA_ID)
@@ -34,7 +28,7 @@ const testData = {
       "title": 'Group 1',
       "membership_status": membership_status.NO_MEMBERSHIP,
       "details": "Group 1 details",
-      "manager_address": "0x0",
+      "group_address": "0x0",
       "user_score": null,
       "short_description": "Not deployed"
     },
@@ -44,7 +38,7 @@ const testData = {
       "title": 'Group 2',
       "membership_status": membership_status.NO_MEMBERSHIP,
       "details": "Group 2 details",
-      "manager_address": "0x0",
+      "group_address": "0x0",
       "user_score": null,
       "short_description": "Not deployed"
     },
@@ -54,7 +48,7 @@ const testData = {
       "title": 'Group 3',
       "membership_status": membership_status.NO_MEMBERSHIP,
       "details": "Group 3 details",
-      "manager_address": "0x0",
+      "group_address": "0x0",
       "user_score": null,
       "short_description": "Not deployed"
     },
@@ -71,6 +65,8 @@ function App() {
   const [loadedGroups, setLoadedGroups] = useState(testData)
 
   const [poolAddress_hack, setPoolAddress_hack] = useState()
+
+  //const readContracts = useContractLoader(IS_SHIPPED ? injectedProvider : localProvider);
 
   return (
     <div className="App">

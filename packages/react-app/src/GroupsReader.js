@@ -24,17 +24,17 @@ export default function GroupsReader(props) {
     console.log("upalaGroupID, userUpalaId", upalaGroupID, userUpalaId);
   }
   
-  let manager_address = readContracts?readContracts[groupContractName].address:""
+  let group_address = readContracts?readContracts[groupContractName].address:""
 
   // First load group
-  if (upalaGroupID && details && manager_address && !loadedGroups[upalaGroupID]) {
+  if (upalaGroupID && details && group_address && !loadedGroups[upalaGroupID]) {
     console.log("Loading ProtoGroup");
     let newEntry ={
       "groupID": upalaGroupID,
       "title": groupContractName,
       "membership_status": membership_status.NO_MEMBERSHIP,
       "details": details,
-      "manager_address": manager_address,
+      "group_address": group_address,
       "user_score": null,
       "pool_address": null,
       "short_description": "Deployed to Kovan"
