@@ -1,8 +1,8 @@
 import React from 'react'
 import { ethers } from "ethers";
-import {membership_status} from "./config";
+import {membership_status} from "../../config";
 
-import { useContractLoader, useContractReader, useEventListener, useBlockNumber, useBalance } from "./hooks"
+import { useContractLoader, useContractReader, useEventListener, useBlockNumber, useBalance } from "../../hooks"
 
 const groupContractName = "ProtoGroup";
 const upalaContractName = "Upala";
@@ -73,13 +73,6 @@ export default function GroupsReader(props) {
         let newUserScore = ethers.utils.formatEther(result);
         console.log("memberScore  ", newUserScore);
         
-        // if (loadedGroups[upalaGroupID].user_score > 0 && loadedGroups[upalaGroupID].user_score != membership_status.JOINED) {
-        //   updateNeeded = true;
-        // }
-
-        // if (loadedGroups[upalaGroupID].user_score != newUserScore) {
-        //   updateNeeded = true;
-        // }
         let newMembershipStatus;
         if (newUserScore > 0) {
           newMembershipStatus = membership_status.JOINED;

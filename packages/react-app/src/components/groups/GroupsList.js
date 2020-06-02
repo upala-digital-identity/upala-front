@@ -1,10 +1,13 @@
 import React from 'react';
 import { List, Avatar } from 'antd';
 
-export default function Groups(props) {
+// Shows groups list filtered by status
+// Lets user to select active group to show in details screen
+export default function GroupsList(props) {
 
   let loadedGroups = props.loadedGroups;
   let statusFilter = props.statusFilter;
+  let setactiveGroupID = props.setactiveGroupID;
 
   let selectedGroups = [];
   for(let id in loadedGroups){
@@ -12,7 +15,6 @@ export default function Groups(props) {
       selectedGroups.push(loadedGroups[id]);
     }
   }
-
 
   if (selectedGroups) {
     return (
@@ -24,7 +26,7 @@ export default function Groups(props) {
               <List.Item>
                 <List.Item.Meta
                   avatar={<Avatar src="https://i.imgur.com/SfYwuRJ.png" />}
-                  title={<a onClick={() => props.setactiveGroupID(item.groupID)}>{item.title} </a>}
+                  title={<a onClick={() => setactiveGroupID(item.groupID)}>{item.title} </a>}
                   description={ item.short_description }
                 />
               </List.Item>

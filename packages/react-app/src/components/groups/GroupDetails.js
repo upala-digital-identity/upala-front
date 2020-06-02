@@ -1,10 +1,12 @@
 import React from 'react';
-import { membership_status, upalaContractName } from "../config";
+import { membership_status, upalaContractName } from "../../config";
 import { ethers } from "ethers";
-import { useContractLoader } from "../hooks"
-import { Transactor } from "../helpers"
+import { useContractLoader } from "../../hooks"
+import { Transactor } from "../../helpers"
 
-export default function Details(props) {
+// Shows group details screen
+// Provides Join and Explode functionality
+export default function GroupDetails(props) {
 
   const activeGroupID = props.activeGroupID;
   const loadedGroups=props.loadedGroups;
@@ -20,27 +22,12 @@ export default function Details(props) {
 
   function joinGroup(groupID) {
     let newGroups = loadedGroups;
-    if (typeof newGroups[groupID] !== 'undefined' 
-        && 
-        typeof newGroups[groupID].membership_status !== 'undefined'
-        && 
-        newGroups[groupID].group_address == "0x0") 
-        {
-          // same as below!!! setLoadedGroups((loadedG...
-          setLoadedGroups((loadedGroups) => {
-            let newGroups = Object.assign({}, loadedGroups);
-            newGroups[groupID].membership_status = membership_status.PENDING_JOIN;
-            newGroups[groupID].user_score = null;
-            return newGroups;
-          })
-        }
 
     if (newGroups[groupID].group_address != "0x0") {
       console.log("writeContracts[loadedGroups");
       //tx(
         writeContracts[loadedGroups[activeGroupID].title].
           join(userUpalaId, { gasLimit: ethers.utils.hexlify(400000) }).then((result) => {
-
             // same as above setLoadedGroups((loadedG... TODO remove dublicate in production
             setLoadedGroups((loadedGroups) => {
               let newGroups = Object.assign({}, loadedGroups);
@@ -48,7 +35,6 @@ export default function Details(props) {
               newGroups[groupID].user_score = null;
               return newGroups;
             })
-
           })
         //)
     }
@@ -57,26 +43,9 @@ export default function Details(props) {
   function explode(groupID) {
     let newGroups = loadedGroups;
 
-    if (typeof newGroups[groupID] !== 'undefined' 
-        && 
-        typeof newGroups[groupID].membership_status !== 'undefined'
-        && 
-        newGroups[groupID].group_address == "0x0")
-        {
-          
-          // same as below setLoadedGroups((loadedG...
-          setLoadedGroups((loadedGroups) => {
-            let newGroups = Object.assign({}, loadedGroups);
-            newGroups[groupID].membership_status = membership_status.PENDING_LEAVE;
-            newGroups[groupID].user_score = null;
-            return newGroups;
-          })
-        }
-
     if (newGroups[groupID].group_address != "0x0") {
 
       // TODO check what is newGroups[groupID].membership_status here
-
 
       console.log("EXPLODE", newGroups[groupID].path);
       //tx(

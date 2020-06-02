@@ -32,7 +32,6 @@ export default function useContractLoader(provider) {
               console.log(e)
             }
           }
-          console.log("Settting Contracts", newContracts);
           setContracts(newContracts)
         }catch(e){
           console.log("ERROR LOADING CONTRACTS!!",e)

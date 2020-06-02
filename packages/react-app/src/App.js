@@ -7,9 +7,9 @@ import { ethers } from "ethers";
 import "./App.css";
 import { useExchangePrice, useGasPrice, useContractLoader } from "./hooks"
 import { Logo, Account, Provider, Faucet, Ramp } from "./components"
-import Groups from "./components/Groups.js"
-import Details from "./components/Details.js"
-import GroupsReader from "./GroupsReader.js"
+import GroupsList from "./components/groups/GroupsList.js"
+import GroupDetails from "./components/groups/GroupDetails.js"
+import GroupsReader from "./components/groups/GroupsReader.js"
 import Welcome from './Welcome.js'
 
 
@@ -90,21 +90,21 @@ function App() {
         <div className="menu">
           <h2>Membership</h2>
           <h3>Suggestions:</h3>
-          <Groups
+          <GroupsList
             loadedGroups={loadedGroups}
             setactiveGroupID={setactiveGroupID}
             statusFilter={membership_status.NO_MEMBERSHIP}
           />
 
           <h3>Pending:</h3>
-          <Groups
+          <GroupsList
             loadedGroups={loadedGroups}
             statusFilter={membership_status.PENDING_JOIN}
             setactiveGroupID={setactiveGroupID}
           />
 
           <h3>Joined:</h3>
-          <Groups
+          <GroupsList
             loadedGroups={loadedGroups}
             statusFilter={membership_status.JOINED}
             setactiveGroupID={setactiveGroupID}
@@ -112,7 +112,7 @@ function App() {
 
         </div>
         <div>
-          <Details
+          <GroupDetails
             activeGroupID={activeGroupID}
             loadedGroups={loadedGroups}
             setLoadedGroups={setLoadedGroups}
