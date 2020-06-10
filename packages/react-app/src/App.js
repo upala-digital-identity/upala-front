@@ -1,16 +1,17 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import 'antd/dist/antd.css';
-import { membership_status, INFURA_ID, IS_SHIPPED } from "./config";
+import { membership_status, INFURA_ID, IS_SHIPPED, GROUP_DEFAULTS } from "./config";
 //import { gql } from "apollo-boost";
 import { ethers } from "ethers";
 //import { useQuery } from "@apollo/react-hooks";
 import "./App.css";
-import { useExchangePrice, useGasPrice, useContractLoader } from "./hooks"
+import { useExchangePrice, useGasPrice, useContractLoader, useContractReader } from "./hooks"
 import { Logo, Account, Provider, Faucet, Ramp } from "./components"
 import GroupsList from "./components/groups/GroupsList.js"
 import GroupDetails from "./components/groups/GroupDetails.js"
 import GroupsReader from "./components/groups/GroupsReader.js"
 import Welcome from './Welcome.js'
+import { async } from 'bnc-notify/dist/notify.umd';
 
 
 // mainnetProvider is used for price discovery
@@ -18,6 +19,9 @@ const mainnetProvider = new ethers.providers.InfuraProvider("mainnet",INFURA_ID)
 const localProvider = new ethers.providers.JsonRpcProvider(process.env.REACT_APP_PROVIDER?process.env.REACT_APP_PROVIDER:"http://localhost:8545")
 
 // test-data
+const groupContractName = "ProtoGroup";
+const upalaContractName = "Upala";
+
 const tempActiveGroupID1 = 111111;
 const tempActiveGroupID2 = 222222;
 const tempActiveGroupID3 = 333333;
@@ -53,6 +57,7 @@ const testData = {
       "short_description": "Not deployed"
     },
 }
+var groups = [];
 
 function App() {
 
@@ -67,6 +72,81 @@ function App() {
   const [poolAddress_hack, setPoolAddress_hack] = useState()
 
   //const readContracts = useContractLoader(IS_SHIPPED ? injectedProvider : localProvider);
+
+
+
+  
+  function Group(contract) {
+    this.contract = contract;
+    this.group_address = contract.address;  // The owner/manager of Upala group (address)
+    this.groupID = null;  // Upala group ID (uint160)
+    this.pool_address = null;  // Address of a pool attached to the group
+    this.details = null;  // raw details string
+    this.user_score = null;  // user score in the group
+    this.membership_status = membership_status.NO_MEMBERSHIP;  // JOINED if user_score > 0
+
+    console.log("Group object created", this);
+
+    this.loadFromContract = async function (functionName, args) {
+      let newValue;
+      try {
+        if( args && args.length > 0){
+          newValue = await this.contract[functionName](...args)
+        } else {
+          newValue = await this.contract[functionName]()
+        }
+      } catch(e) {
+        console.log("debug contractName, functionName", functionName);
+        console.log(e)
+      }
+      return newValue;
+    }
+
+    this.loadDetails = async function() {
+      this.details = await this.loadFromContract("getGroupDetails");
+    }
+    this.loadUpalaGroupID = async function() {
+      console.log(this.groupID)
+      this.groupID = await this.loadFromContract("getUpalaGroupID");
+      
+    }
+
+    this.loadDetails();
+    // this.loadUpalaGroupID();
+  }
+  
+  
+
+  const readContracts = useContractLoader(localProvider);
+
+  if (readContracts && readContracts[groupContractName]) {
+    let isInitialized = false;
+    for (let g of groups) {
+      if (g.contract == readContracts[groupContractName]) {
+        isInitialized = true;
+        console.log("isInitialized");
+      }
+    }
+    if (!isInitialized) {
+      let testGroup = new Group(readContracts[groupContractName]);
+      groups.push(testGroup);
+    }
+    
+    // console.log("findd", groups.indexOf(testGroup));
+    console.log("testGroup.details", groups[0].groupID, groups.length);
+  }
+
+  const hack_update_group_id = function () {
+    if(groups[0].loadUpalaGroupID){
+      console.log(groups[0].groupID)
+      groups[0].loadUpalaGroupID()
+    };
+    
+  }
+
+  
+
+
 
   return (
     <div className="App">
@@ -117,6 +197,7 @@ function App() {
             loadedGroups={loadedGroups}
             setLoadedGroups={setLoadedGroups}
             userUpalaId={userUpalaId}
+            updateGroupID={hack_update_group_id}
 
             address={address}
             injectedProvider={injectedProvider}
@@ -126,14 +207,14 @@ function App() {
         </div>
 
         <div>
-            <GroupsReader
+            {/* <GroupsReader
               localProvider={IS_SHIPPED ? injectedProvider : localProvider}
               address={address}
               userUpalaId={userUpalaId}
               loadedGroups={loadedGroups}
               setLoadedGroups={setLoadedGroups}
               setPoolAddress_hack={setPoolAddress_hack}
-            />
+            /> */}
           
           <div>
             <Welcome

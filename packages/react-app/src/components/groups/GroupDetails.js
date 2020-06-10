@@ -12,6 +12,7 @@ export default function GroupDetails(props) {
   const loadedGroups=props.loadedGroups;
   const setLoadedGroups = props.setLoadedGroups;
   const userUpalaId = props.userUpalaId;
+  const updateId = props.updateGroupID;
 
   // Blockchain interaction
   const tx = Transactor(props.injectedProvider,props.gasPrice)
@@ -65,6 +66,10 @@ export default function GroupDetails(props) {
     }
   }
 
+  function updateID() {
+    updateId();
+  }
+
 
   if (activeGroupID) {
     console.log("activeGroupID", activeGroupID);
@@ -75,6 +80,7 @@ export default function GroupDetails(props) {
         <div>
           <a onClick={() => joinGroup(activeGroupID)}>Join</a> <br />
           <a onClick={() => explode(activeGroupID)}>EXPLODE</a> <br />
+          
         </div>
       )
     }
@@ -96,6 +102,7 @@ export default function GroupDetails(props) {
         <b>membership_status:</b> {loadedGroups[activeGroupID].membership_status} <br />
         <b>details:</b> {loadedGroups[activeGroupID].details} <br />
         <b>group_address:</b> {loadedGroups[activeGroupID].group_address} <br />
+        <a onClick={() => updateID()}>updateID()</a> <br />
         { displayLinks }
       </div>
 
