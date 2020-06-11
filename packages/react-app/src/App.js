@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import 'antd/dist/antd.css';
-import { membership_status, INFURA_ID, IS_SHIPPED, GROUP_DEFAULTS } from "./config";
+import { membership_status, INFURA_ID, IS_SHIPPED, network, GROUP_ABI_FILE } from "./config";
 //import { gql } from "apollo-boost";
 import { ethers } from "ethers";
 //import { useQuery } from "@apollo/react-hooks";
@@ -22,42 +22,101 @@ const localProvider = new ethers.providers.JsonRpcProvider(process.env.REACT_APP
 const groupContractName = "ProtoGroup";
 const upalaContractName = "Upala";
 
-const tempActiveGroupID1 = 111111;
-const tempActiveGroupID2 = 222222;
-const tempActiveGroupID3 = 333333;
-const testData = {
-  [tempActiveGroupID1]: 
-    { 
-      "groupID": tempActiveGroupID1,
-      "title": 'Group 1',
-      "membership_status": membership_status.NO_MEMBERSHIP,
-      "details": "Group 1 details",
-      "group_address": "0x0",
-      "user_score": null,
-      "short_description": "Not deployed"
-    },
-  [tempActiveGroupID2]:
-    {
-      "groupID": tempActiveGroupID2,
-      "title": 'Group 2',
-      "membership_status": membership_status.NO_MEMBERSHIP,
-      "details": "Group 2 details",
-      "group_address": "0x0",
-      "user_score": null,
-      "short_description": "Not deployed"
-    },
-  [tempActiveGroupID3]:
-    {
-      "groupID": tempActiveGroupID3,
-      "title": 'Group 3',
-      "membership_status": membership_status.NO_MEMBERSHIP,
-      "details": "Group 3 details",
-      "group_address": "0x0",
-      "user_score": null,
-      "short_description": "Not deployed"
-    },
+
+
+class Group {
+  constructor(contract) {
+    // set defaults
+    this.group_address = contract.address;  // The owner/manager of Upala group (address)
+    this.contract = contract;
+    this.groupID = null; // Upala group ID (uint160)
+    this.pool_address = null; // Address of a pool attached to the group
+    this.details = null; // raw details string
+    this.user_score = null; // user score in the group
+    this.membership_status = membership_status.NO_MEMBERSHIP; // JOINED if user_score > 0
+    console.log("Group object created", this);
+  }
+  async loadFromContract(functionName, args) {
+    let newValue;
+    try {
+      if (args && args.length > 0) {
+        newValue = await this.contract[functionName](...args);
+      }
+      else {
+        newValue = await this.contract[functionName]();
+      }
+    }
+    catch (e) {
+      console.log("debug contractName, functionName", functionName);
+      console.log(e);
+    }
+    return newValue;
+  }
+  async loadDetails(){
+      this.details = await this.loadFromContract("getGroupDetails");
+      this.groupID = (await this.loadFromContract("getUpalaGroupID")).toNumber();
+      this.pool_address = await this.loadFromContract("getGroupPoolAddress");
+  }
+  // let path = [userUpalaId, upalaGroupID];
+  async loadUserScore(path, userAddress) {
+      this.user_score = ethers.utils.formatEther(await this.loadFromContract("memberScore", [path, { from: userAddress }]));
+      console.log("this.user_score", this.user_score);
+  }
+  async join(){
+    console.log("Join ", this.groupID);
+  }
 }
-var groups = [];
+
+
+
+var userGroups;
+class UserGroups {
+  constructor(signer, updater) {
+    this.groups = {};
+    this.signer = signer;
+    this.updater = updater;
+  }
+  async addGroupAddress(address) {
+    if (typeof this.groups[address] == "undefined") {
+      try {
+        let newContract = new ethers.Contract(address, require("./contracts/" + network + "/" + GROUP_ABI_FILE), this.signer);
+        this.groups[address] = new Group(newContract);
+        await this.groups[address].loadDetails()
+        this.updateUI();
+      }
+      catch (e) {
+        console.log("ERROR LOADING CONTRACTS!!", e);
+      }
+    }
+  }
+  async join(groupAddress){
+    console.log("groupAddress", groupAddress, this.groups[groupAddress], this.groups)
+    await this.groups[groupAddress].join();
+    /// this.updateUI();
+  }
+  updateUI(){
+    let newLoadedGroups = {};
+    for (var address in this.groups) {
+      console.log("newLoadedGroups", this.groups[address]);
+      console.log("newLoadedGroups", this.groups[address].groupID);
+      let newEntry = {
+        "groupID": this.groups[address].groupID,
+        "title": "Base group",
+        "membership_status": membership_status.NO_MEMBERSHIP,
+        "details": this.groups[address].details,
+        "group_address": address,
+        "user_score": null,
+        "short_description": "Base group short description",
+        "join": this.groups[address].join
+      }
+      newLoadedGroups[address] = newEntry;
+    }
+    this.updater(newLoadedGroups);
+    console.log("newLoadedGroups", newLoadedGroups)
+  }
+}
+
+
 
 function App() {
 
@@ -67,80 +126,44 @@ function App() {
   const price = useExchangePrice(mainnetProvider);
   const gasPrice = useGasPrice("fast")
   const [userUpalaId, setUserUpalaId] = useState();
-  const [loadedGroups, setLoadedGroups] = useState(testData)
+  const [loadedGroups, setLoadedGroups] = useState()
 
   const [poolAddress_hack, setPoolAddress_hack] = useState()
 
-  //const readContracts = useContractLoader(IS_SHIPPED ? injectedProvider : localProvider);
-
-
-
   
-  function Group(contract) {
-    this.contract = contract;
-    this.group_address = contract.address;  // The owner/manager of Upala group (address)
-    this.groupID = null;  // Upala group ID (uint160)
-    this.pool_address = null;  // Address of a pool attached to the group
-    this.details = null;  // raw details string
-    this.user_score = null;  // user score in the group
-    this.membership_status = membership_status.NO_MEMBERSHIP;  // JOINED if user_score > 0
+  useEffect(() => {
+    async function initializeUserGroups() {
+      if(typeof localProvider != "undefined")
+      {
+        console.log("initializeUserGroups");
+        try{
+          //we need to check to see if this provider has a signer or not
+          let signer
+          let accounts = await localProvider.listAccounts()
+          if(accounts && accounts.length>0){
+            signer = localProvider.getSigner()
+          }else{
+            signer = localProvider
+          }
+          userGroups = new UserGroups(signer, setLoadedGroups);
+          let preloadedGroupAddress = require("./contracts/" + network + "/" + "ProtoGroup.address.js");
+          userGroups.addGroupAddress(preloadedGroupAddress);
 
-    console.log("Group object created", this);
-
-    this.loadFromContract = async function (functionName, args) {
-      let newValue;
-      try {
-        if( args && args.length > 0){
-          newValue = await this.contract[functionName](...args)
-        } else {
-          newValue = await this.contract[functionName]()
+        }catch(e){
+          console.log("ERROR LOADING CONTRACTS!!",e)
         }
-      } catch(e) {
-        console.log("debug contractName, functionName", functionName);
-        console.log(e)
-      }
-      return newValue;
-    }
-
-    this.loadDetails = async function() {
-      this.details = await this.loadFromContract("getGroupDetails");
-    }
-    this.loadUpalaGroupID = async function() {
-      console.log(this.groupID)
-      this.groupID = await this.loadFromContract("getUpalaGroupID");
-      
-    }
-
-    this.loadDetails();
-    // this.loadUpalaGroupID();
-  }
-  
-  
-
-  const readContracts = useContractLoader(localProvider);
-
-  if (readContracts && readContracts[groupContractName]) {
-    let isInitialized = false;
-    for (let g of groups) {
-      if (g.contract == readContracts[groupContractName]) {
-        isInitialized = true;
-        console.log("isInitialized");
       }
     }
-    if (!isInitialized) {
-      let testGroup = new Group(readContracts[groupContractName]);
-      groups.push(testGroup);
-    }
-    
-    // console.log("findd", groups.indexOf(testGroup));
-    console.log("testGroup.details", groups[0].groupID, groups.length);
-  }
+    initializeUserGroups()
+  },[localProvider])
+
 
   const hack_update_group_id = function () {
-    if(groups[0].loadUpalaGroupID){
-      console.log(groups[0].groupID)
-      groups[0].loadUpalaGroupID()
-    };
+    console.log('df');
+    // if(groups[0].loadUpalaGroupID){
+    //   console.log(groups[0].groupID)
+    //   groups[0].loadUpalaGroupID()
+    // };
     
   }
 

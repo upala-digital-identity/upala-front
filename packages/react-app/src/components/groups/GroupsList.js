@@ -26,7 +26,7 @@ export default function GroupsList(props) {
               <List.Item>
                 <List.Item.Meta
                   avatar={<Avatar src="https://i.imgur.com/SfYwuRJ.png" />}
-                  title={<a onClick={() => setactiveGroupID(item.groupID)}>{item.title} </a>}
+                  title={<a onClick={() => setactiveGroupID(item.group_address)}>{item.title} </a>}
                   description={ item.short_description }
                 />
               </List.Item>

@@ -94,10 +94,13 @@ export default function Account(props) {
     }
   }, []);
 
+  let poolBalance;
+  let userBalance;
+
   const readContracts = useContractLoader(props.localProvider);
 
-  const poolBalance = useContractReader(readContracts,daiContractName,"balanceOf",[props.poolAddress_hack],5000);
-  const userBalance = useContractReader(readContracts,daiContractName,"balanceOf",[props.address],5000);
+  // poolBalance = useContractReader(readContracts,daiContractName,"balanceOf",[props.poolAddress_hack],5000);
+  // userBalance = useContractReader(readContracts,daiContractName,"balanceOf",[props.address],5000);
 
   let displayPoolBalance = poolBalance?ethers.utils.formatEther(poolBalance):"Loading...";
   let displayUserBalance = userBalance?ethers.utils.formatEther(userBalance):"Loading...";

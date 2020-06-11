@@ -20,26 +20,28 @@ export default function GroupDetails(props) {
   const writeContracts = useContractLoader(props.injectedProvider);
   
 
-
   function joinGroup(groupID) {
-    let newGroups = loadedGroups;
-
-    if (newGroups[groupID].group_address != "0x0") {
-      console.log("writeContracts[loadedGroups");
-      //tx(
-        writeContracts[loadedGroups[activeGroupID].title].
-          join(userUpalaId, { gasLimit: ethers.utils.hexlify(400000) }).then((result) => {
-            // same as above setLoadedGroups((loadedG... TODO remove dublicate in production
-            setLoadedGroups((loadedGroups) => {
-              let newGroups = Object.assign({}, loadedGroups);
-              newGroups[groupID].membership_status = membership_status.PENDING_JOIN;
-              newGroups[groupID].user_score = null;
-              return newGroups;
-            })
-          })
-        //)
-    }
+    loadedGroups[groupID].join(groupID);
   }
+  // function joinGroup(groupID) {
+  //   let newGroups = loadedGroups;
+
+  //   if (newGroups[groupID].group_address != "0x0") {
+  //     console.log("writeContracts[loadedGroups");
+  //     //tx(
+  //       writeContracts[loadedGroups[activeGroupID].title].
+  //         join(userUpalaId, { gasLimit: ethers.utils.hexlify(400000) }).then((result) => {
+  //           // same as above setLoadedGroups((loadedG... TODO remove dublicate in production
+  //           setLoadedGroups((loadedGroups) => {
+  //             let newGroups = Object.assign({}, loadedGroups);
+  //             newGroups[groupID].membership_status = membership_status.PENDING_JOIN;
+  //             newGroups[groupID].user_score = null;
+  //             return newGroups;
+  //           })
+  //         })
+  //       //)
+  //   }
+  // }
 
   function explode(groupID) {
     let newGroups = loadedGroups;
@@ -75,7 +77,7 @@ export default function GroupDetails(props) {
     console.log("activeGroupID", activeGroupID);
     
     let displayLinks = "";
-    if (userUpalaId) {
+    // if (userUpalaId) {
       displayLinks = (
         <div>
           <a onClick={() => joinGroup(activeGroupID)}>Join</a> <br />
@@ -83,7 +85,7 @@ export default function GroupDetails(props) {
           
         </div>
       )
-    }
+    // }
 
     let displayScore = "";
     if (loadedGroups[activeGroupID].user_score) {
