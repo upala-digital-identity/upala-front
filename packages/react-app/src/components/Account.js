@@ -35,22 +35,6 @@ const web3Modal = new Web3Modal({
 
 export default function Account(props) {
 
-  // const readContracts = props.readContracts;
-  // const createBurnerIfNoAddress = () => {
-  //   if (!props.injectedProvider && props.localProvider){
-  //     if(props.localProvider.connection && props.localProvider.connection.url){
-  //       props.setInjectedProvider(new ethers.providers.Web3Provider(new BurnerProvider(props.localProvider.connection.url)))
-  //     }else if( props.localProvider._network && props.localProvider._network.name ){
-  //       props.setInjectedProvider(new ethers.providers.Web3Provider(new BurnerProvider("https://"+props.localProvider._network.name+".infura.io/v3/"+INFURA_ID)))
-  //     }else{
-  //       props.setInjectedProvider(new ethers.providers.Web3Provider(new BurnerProvider("https://mainnet.infura.io/v3/"+INFURA_ID)))
-  //     }
-  //   }else{
-  //     pollInjectedProvider()
-  //   }
-  // }
-  // useEffect(createBurnerIfNoAddress, [props.injectedProvider]);
-
   const pollInjectedProvider = async ()=>{
     if(props.injectedProvider){
       let accounts = await props.injectedProvider.listAccounts()
@@ -94,20 +78,13 @@ export default function Account(props) {
     }
   }, []);
 
-  let poolBalance;
   let userBalance;
-
   const readContracts = useContractLoader(props.localProvider);
-
-  // poolBalance = useContractReader(readContracts,daiContractName,"balanceOf",[props.poolAddress_hack],5000);
   // userBalance = useContractReader(readContracts,daiContractName,"balanceOf",[props.address],5000);
-
-  let displayPoolBalance = poolBalance?ethers.utils.formatEther(poolBalance):"Loading...";
   let displayUserBalance = userBalance?ethers.utils.formatEther(userBalance):"Loading...";
   
   return (
     <div>
-      Pool balance: {displayPoolBalance} DAI Your balance: {displayUserBalance} DAI . . .
       
       {props.address?(
         <Address value={props.address} ensProvider={props.mainnetProvider}/>

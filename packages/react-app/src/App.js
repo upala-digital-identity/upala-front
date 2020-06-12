@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import 'antd/dist/antd.css';
-import { membership_status, INFURA_ID, IS_SHIPPED, network, GROUP_ABI_FILE } from "./config";
+import { daiContractName, membership_status, INFURA_ID, IS_SHIPPED, network, GROUP_ABI_FILE } from "./config";
 //import { gql } from "apollo-boost";
 import { ethers } from "ethers";
 //import { useQuery } from "@apollo/react-hooks";
@@ -9,20 +9,10 @@ import { useExchangePrice, useGasPrice, useContractLoader, useContractReader } f
 import { Logo, Account, Provider, Faucet, Ramp } from "./components"
 import GroupsList from "./components/groups/GroupsList.js"
 import GroupDetails from "./components/groups/GroupDetails.js"
-import GroupsReader from "./components/groups/GroupsReader.js"
-import Welcome from './Welcome.js'
+import Welcome from './components/Welcome.js'
 import { async } from 'bnc-notify/dist/notify.umd';
 
-
-// mainnetProvider is used for price discovery
-const mainnetProvider = new ethers.providers.InfuraProvider("mainnet",INFURA_ID)
-const localProvider = new ethers.providers.JsonRpcProvider(process.env.REACT_APP_PROVIDER?process.env.REACT_APP_PROVIDER:"http://localhost:8545")
-
-// test-data
-const groupContractName = "ProtoGroup";
-const upalaContractName = "Upala";
-
-
+var globalDAIContract;
 
 class Group {
   constructor(contract) {
@@ -34,6 +24,7 @@ class Group {
     this.details = null; // raw details string
     this.user_score = null; // user score in the group
     this.membership_status = membership_status.NO_MEMBERSHIP; // JOINED if user_score > 0
+    this.path = [];
     console.log("Group object created", this);
   }
   async loadFromContract(functionName, args) {
@@ -52,36 +43,68 @@ class Group {
     }
     return newValue;
   }
+  setPath(newPath) {
+    this.path = newPath;
+  }
   async loadDetails(){
       this.details = await this.loadFromContract("getGroupDetails");
       this.groupID = (await this.loadFromContract("getUpalaGroupID")).toNumber();
       this.pool_address = await this.loadFromContract("getGroupPoolAddress");
   }
-  // let path = [userUpalaId, upalaGroupID];
+  async join(userUpalaId, callback){
+    console.log("Join ", this.groupID);
+    await this.contract.join(userUpalaId, { gasLimit: ethers.utils.hexlify(400000) });
+    this.membership_status = membership_status.PENDING_JOIN;
+    callback();
+  }
   async loadUserScore(path, userAddress) {
       this.user_score = ethers.utils.formatEther(await this.loadFromContract("memberScore", [path, { from: userAddress }]));
       console.log("this.user_score", this.user_score);
   }
-  async join(){
-    console.log("Join ", this.groupID);
+  async explode(callback){
+    await this.contract.attack(this.path, { gasLimit: ethers.utils.hexlify(400000) });
+    callback();
   }
+  async checkBalance() {
+    if (globalDAIContract) {
+      // globalDAIContract.balanceOf(this.pool_address);
+      console.log("checkBalance");
+      console.log("checkBalance", globalDAIContract.balanceOf(this.pool_address))
+    }
+  }
+
+  // poolBalance = useContractReader(readContracts,daiContractName,"balanceOf",[props.poolAddress_hack],5000);
+  // // userBalance = useContractReader(readContracts,daiContractName,"balanceOf",[props.address],5000);
+
+  // let displayPoolBalance = poolBalance?ethers.utils.formatEther(poolBalance):"Loading...";
+  // let displayUserBalance = userBalance?ethers.utils.formatEther(userBalance):"Loading...";
+
 }
 
 
 
 var userGroups;
 class UserGroups {
-  constructor(signer, updater) {
+  constructor(userUpalaId, signer, updater) {
     this.groups = {};
+    this.userUpalaId = userUpalaId;
     this.signer = signer;
     this.updater = updater;
   }
   async addGroupAddress(address) {
     if (typeof this.groups[address] == "undefined") {
       try {
-        let newContract = new ethers.Contract(address, require("./contracts/" + network + "/" + GROUP_ABI_FILE), this.signer);
+        let newContract = new ethers.Contract(
+          address, 
+          require("./contracts/" + network + "/" + GROUP_ABI_FILE), 
+          this.signer
+        );
         this.groups[address] = new Group(newContract);
         await this.groups[address].loadDetails()
+
+        // TODO hardcoded single layer hierarchy => make it multilayer (set paths somewhere above)
+        this.groups[address].setPath([this.userUpalaId, this.groups[address].groupID])
+
         this.updateUI();
       }
       catch (e) {
@@ -89,34 +112,31 @@ class UserGroups {
       }
     }
   }
-  async join(groupAddress){
-    console.log("groupAddress", groupAddress, this.groups[groupAddress], this.groups)
-    await this.groups[groupAddress].join();
-    /// this.updateUI();
-  }
+
   updateUI(){
     let newLoadedGroups = {};
     for (var address in this.groups) {
-      console.log("newLoadedGroups", this.groups[address]);
-      console.log("newLoadedGroups", this.groups[address].groupID);
       let newEntry = {
         "groupID": this.groups[address].groupID,
         "title": "Base group",
-        "membership_status": membership_status.NO_MEMBERSHIP,
+        "membership_status": this.groups[address].membership_status,
         "details": this.groups[address].details,
         "group_address": address,
         "user_score": null,
         "short_description": "Base group short description",
-        "join": this.groups[address].join
+        "join_handler": () => this.groups[address].join(this.userUpalaId, () => this.updateUI()),
+        "path": this.groups[address].path,
       }
       newLoadedGroups[address] = newEntry;
     }
     this.updater(newLoadedGroups);
-    console.log("newLoadedGroups", newLoadedGroups)
   }
 }
 
 
+// mainnetProvider is used for price discovery
+const mainnetProvider = new ethers.providers.InfuraProvider("mainnet",INFURA_ID)
+const localProvider = new ethers.providers.JsonRpcProvider(process.env.REACT_APP_PROVIDER?process.env.REACT_APP_PROVIDER:"http://localhost:8545")
 
 function App() {
 
@@ -128,24 +148,26 @@ function App() {
   const [userUpalaId, setUserUpalaId] = useState();
   const [loadedGroups, setLoadedGroups] = useState()
 
-  const [poolAddress_hack, setPoolAddress_hack] = useState()
 
-  
+  const contracts = useContractLoader(injectedProvider);
+  globalDAIContract = contracts ? contracts[daiContractName] : null
+
   useEffect(() => {
-    async function initializeUserGroups() {
-      if(typeof localProvider != "undefined")
+    async function initializeUserGroups(provider, userUpalaId) {
+      console.log("initializeUserGroups", provider, userUpalaId);
+      if(typeof provider != "undefined" && typeof userUpalaId != "undefined")
       {
-        console.log("initializeUserGroups");
+        console.log("initializeUserGroups", provider, userUpalaId);
         try{
           //we need to check to see if this provider has a signer or not
           let signer
-          let accounts = await localProvider.listAccounts()
+          let accounts = await provider.listAccounts()
           if(accounts && accounts.length>0){
-            signer = localProvider.getSigner()
+            signer = provider.getSigner()
           }else{
-            signer = localProvider
+            signer = provider
           }
-          userGroups = new UserGroups(signer, setLoadedGroups);
+          userGroups = new UserGroups(userUpalaId, signer, setLoadedGroups);
           let preloadedGroupAddress = require("./contracts/" + network + "/" + "ProtoGroup.address.js");
           userGroups.addGroupAddress(preloadedGroupAddress);
 
@@ -154,20 +176,11 @@ function App() {
         }
       }
     }
-    initializeUserGroups()
-  },[localProvider])
+    initializeUserGroups(injectedProvider, userUpalaId)
+  },[injectedProvider, userUpalaId])
 
 
-  const hack_update_group_id = function () {
-    console.log('df');
-    // if(groups[0].loadUpalaGroupID){
-    //   console.log(groups[0].groupID)
-    //   groups[0].loadUpalaGroupID()
-    // };
-    
-  }
 
-  
 
 
 
@@ -177,7 +190,6 @@ function App() {
         <Logo />
         <div style={{position:'fixed',textAlign:'right',right:0,top:0,padding:10}}>
           <Account
-            poolAddress_hack={poolAddress_hack}
             address={address}
             setAddress={setAddress}
             localProvider={IS_SHIPPED ? injectedProvider : localProvider}
@@ -195,8 +207,8 @@ function App() {
           <h3>Suggestions:</h3>
           <GroupsList
             loadedGroups={loadedGroups}
-            setactiveGroupID={setactiveGroupID}
             statusFilter={membership_status.NO_MEMBERSHIP}
+            setactiveGroupID={setactiveGroupID}
           />
 
           <h3>Pending:</h3>
@@ -215,30 +227,16 @@ function App() {
 
         </div>
         <div>
+        { activeGroupID ? (
           <GroupDetails
-            activeGroupID={activeGroupID}
-            loadedGroups={loadedGroups}
-            setLoadedGroups={setLoadedGroups}
-            userUpalaId={userUpalaId}
-            updateGroupID={hack_update_group_id}
-
-            address={address}
+            activeGroup = {loadedGroups[activeGroupID]}
             injectedProvider={injectedProvider}
-            localProvider={IS_SHIPPED ? injectedProvider : localProvider}
-            gasPrice={gasPrice}
           />
+          ) : ""
+        }
         </div>
 
         <div>
-            {/* <GroupsReader
-              localProvider={IS_SHIPPED ? injectedProvider : localProvider}
-              address={address}
-              userUpalaId={userUpalaId}
-              loadedGroups={loadedGroups}
-              setLoadedGroups={setLoadedGroups}
-              setPoolAddress_hack={setPoolAddress_hack}
-            /> */}
-          
           <div>
             <Welcome
               address={address}
@@ -257,7 +255,6 @@ function App() {
       <div style={{position:'fixed',textAlign:'left',left:0,bottom:20,padding:10}}>
         <Faucet
           localProvider={localProvider}
-          dollarMultiplier={price}
         />
 
       </div>

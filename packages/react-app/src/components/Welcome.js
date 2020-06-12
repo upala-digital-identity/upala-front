@@ -1,7 +1,7 @@
 import React from 'react'
 import { ethers } from "ethers";
-import { useContractLoader, useContractReader } from "./hooks"
-import { Transactor } from "./helpers"
+import { useContractLoader, useContractReader } from "../hooks"
+import { Transactor } from "../helpers"
 
 
 const upalaContractName = "Upala"
