@@ -12,11 +12,48 @@ import GroupDetails from "./components/groups/GroupDetails.js"
 import Welcome from './components/Welcome.js'
 import { async } from 'bnc-notify/dist/notify.umd';
 
-var globalDAIContract;
+
+
+// moving all Ethereum interaction into this class (substitute for contractLoader, contractReader)
+class Contracts {
+  constructor (network) {
+    this.contracts = {};
+    this.signer = null;
+    try{
+      let contractList = require("./contracts/" + network + "/contracts.js")
+      for(let c in contractList){
+        this.contracts[contractList[c]] = {
+          address: require("./contracts/" + network + "/" + contractList[c]+".address.js"),
+          abi: require("./contracts/" + network + "/" + contractList[c]+".abi.js"),
+        }
+      }
+    }catch(e){
+      console.log("ERROR LOADING DEFAULT CONTRACTS!!",e)
+    }
+  }
+  updateProvider(signer) {
+    this.signer = signer;
+    this.initializeAllContracts();
+  }
+  initializeContract(abi, address, signer) {
+    return new ethers.Contract(address, abi, signer);
+  }
+  initializeAllContracts() {
+    for(let c in this.contracts){
+      let abi = this.contracts[c].abi;
+      let address = this.contracts[c].address;
+      this.contracts[c].contract = this.initializeContract(abi, address, this.signer);
+    }
+  }
+
+  readFromContract(contractName, functionName, args) {
+
+  }
+}
 
 class Group {
   constructor(contract) {
-    // set defaults
+    // set defaults // TODO move to this.fields or similar
     this.group_address = contract.address;  // The owner/manager of Upala group (address)
     this.contract = contract;
     this.groupID = null; // Upala group ID (uint160)
@@ -83,7 +120,7 @@ class Group {
 
 
 
-var userGroups;
+
 class UserGroups {
   constructor(userUpalaId, signer, updater) {
     this.groups = {};
@@ -116,6 +153,7 @@ class UserGroups {
   updateUI(){
     let newLoadedGroups = {};
     for (var address in this.groups) {
+      // TODO warn: dublicates code in Contract class (create fields or smth. similar)
       let newEntry = {
         "groupID": this.groups[address].groupID,
         "title": "Base group",
@@ -135,8 +173,12 @@ class UserGroups {
 
 
 // mainnetProvider is used for price discovery
-const mainnetProvider = new ethers.providers.InfuraProvider("mainnet",INFURA_ID)
-const localProvider = new ethers.providers.JsonRpcProvider(process.env.REACT_APP_PROVIDER?process.env.REACT_APP_PROVIDER:"http://localhost:8545")
+const mainnetProvider = new ethers.providers.InfuraProvider("mainnet",INFURA_ID);
+const localProvider = new ethers.providers.JsonRpcProvider(process.env.REACT_APP_PROVIDER?process.env.REACT_APP_PROVIDER:"http://localhost:8545");
+const smartContracts = new Contracts(network);
+
+var globalDAIContract;
+var userGroups;
 
 function App() {
 
@@ -160,6 +202,7 @@ function App() {
         console.log("initializeUserGroups", provider, userUpalaId);
         try{
           //we need to check to see if this provider has a signer or not
+          //TODO move signer detection to Account component
           let signer
           let accounts = await provider.listAccounts()
           if(accounts && accounts.length>0){
@@ -167,6 +210,7 @@ function App() {
           }else{
             signer = provider
           }
+          smartContracts.updateProvider(signer);
           userGroups = new UserGroups(userUpalaId, signer, setLoadedGroups);
           let preloadedGroupAddress = require("./contracts/" + network + "/" + "ProtoGroup.address.js");
           userGroups.addGroupAddress(preloadedGroupAddress);
