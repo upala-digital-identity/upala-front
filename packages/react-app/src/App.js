@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import 'antd/dist/antd.css';
-import { daiContractName, membership_status, INFURA_ID, IS_SHIPPED, network, GROUP_ABI_FILE } from "./config";
+import { daiContractName, membership_status, INFURA_ID, IS_SHIPPED, network, BASE_GROUP_CONTRACT_NAME } from "./config";
 //import { gql } from "apollo-boost";
 import { ethers } from "ethers";
 //import { useQuery } from "@apollo/react-hooks";
@@ -13,41 +13,78 @@ import Welcome from './components/Welcome.js'
 import { async } from 'bnc-notify/dist/notify.umd';
 
 
+class Contract {
+  constructor(abi, address = "0x0") {
+    this.abi = abi;
+    this.address = address;
+    this.contractInstance = null;
+  }
+  initialize(signer) {
+    this.contractInstance = new ethers.Contract(this.address, this.abi, signer);
+  }
+  async read(functionName, args) {
+    let newValue;
+    try {
+      if (args && args.length > 0) {
+        newValue = await this.contractInstance[functionName](...args);
+      }
+      else {
+        newValue = await this.contractInstance[functionName]();
+      }
+    }
+    catch (e) {
+      console.log("debug contractName, functionName", functionName);
+      console.log(e);
+    }
+    return newValue;
+  }
+  async write(functionName, args) {
+    return this.read(functionName, args);
+  }
+  getABI(){
+    return this.abi;
+  }
+  getAddress(){
+    return this.address;
+  }
+}
 
 // moving all Ethereum interaction into this class (substitute for contractLoader, contractReader)
-class Contracts {
+class EthereumGateway {
   constructor (network) {
     this.contracts = {};
     this.signer = null;
     try{
       let contractList = require("./contracts/" + network + "/contracts.js")
       for(let c in contractList){
-        this.contracts[contractList[c]] = {
-          address: require("./contracts/" + network + "/" + contractList[c]+".address.js"),
-          abi: require("./contracts/" + network + "/" + contractList[c]+".abi.js"),
-        }
+        let address = require("./contracts/" + network + "/" + contractList[c]+".address.js");
+        let abi = require("./contracts/" + network + "/" + contractList[c]+".abi.js");
+        this.contracts[contractList[c]] = new Contract(abi, address);
       }
     }catch(e){
       console.log("ERROR LOADING DEFAULT CONTRACTS!!",e)
     }
   }
-  updateProvider(signer) {
+  async updateProvider(provider) {
+    let signer
+    let accounts = await provider.listAccounts()
+    if(accounts && accounts.length>0){
+      signer = provider.getSigner()
+    }else{
+      signer = provider
+    }
     this.signer = signer;
     this.initializeAllContracts();
   }
-  initializeContract(abi, address, signer) {
-    return new ethers.Contract(address, abi, signer);
-  }
   initializeAllContracts() {
     for(let c in this.contracts){
-      let abi = this.contracts[c].abi;
-      let address = this.contracts[c].address;
-      this.contracts[c].contract = this.initializeContract(abi, address, this.signer);
+      this.contracts[c].initialize(this.signer);
     }
   }
-
-  readFromContract(contractName, functionName, args) {
-
+  addContract(contractName, abi, address) {
+    this.contracts[contractName] = new Contract(abi, address);
+    this.contracts[contractName].initialize(this.signer);
+    return this.contracts[contractName];
   }
 }
 
@@ -62,44 +99,32 @@ class Group {
     this.user_score = null; // user score in the group
     this.membership_status = membership_status.NO_MEMBERSHIP; // JOINED if user_score > 0
     this.path = [];
-    console.log("Group object created", this);
-  }
-  async loadFromContract(functionName, args) {
-    let newValue;
-    try {
-      if (args && args.length > 0) {
-        newValue = await this.contract[functionName](...args);
-      }
-      else {
-        newValue = await this.contract[functionName]();
-      }
-    }
-    catch (e) {
-      console.log("debug contractName, functionName", functionName);
-      console.log(e);
-    }
-    return newValue;
   }
   setPath(newPath) {
     this.path = newPath;
   }
   async loadDetails(){
-      this.details = await this.loadFromContract("getGroupDetails");
-      this.groupID = (await this.loadFromContract("getUpalaGroupID")).toNumber();
-      this.pool_address = await this.loadFromContract("getGroupPoolAddress");
+      this.details = await this.contract.read("getGroupDetails");
+      this.groupID = (await this.contract.read("getUpalaGroupID")).toNumber();
+      this.pool_address = await this.contract.read("getGroupPoolAddress");
+      // this.user_score = await this.loadUserScore();
+      // console.log("this.user_score", this.user_score);
   }
   async join(userUpalaId, callback){
     console.log("Join ", this.groupID);
-    await this.contract.join(userUpalaId, { gasLimit: ethers.utils.hexlify(400000) });
-    this.membership_status = membership_status.PENDING_JOIN;
-    callback();
+    let result = await this.contract.write("join", [userUpalaId, { gasLimit: ethers.utils.hexlify(400000) }]);
+    if (result) {
+      this.membership_status = membership_status.PENDING_JOIN;
+      callback();
+    }
   }
-  async loadUserScore(path, userAddress) {
-      this.user_score = ethers.utils.formatEther(await this.loadFromContract("memberScore", [path, { from: userAddress }]));
-      console.log("this.user_score", this.user_score);
+  async loadUserScore() { //}, userAddress) {
+      // this.user_score = ethers.utils.formatEther(await this.contract.read("memberScore", [path, { from: userAddress }]));
+      // this.user_score = ethers.utils.formatEther(await this.contract.read("memberScore", [this.path]));
+      this.user_score = await this.contract.read("getScoreByPath", [this.path]);
   }
   async explode(callback){
-    await this.contract.attack(this.path, { gasLimit: ethers.utils.hexlify(400000) });
+    await this.contract.write("attack", [this.path, { gasLimit: ethers.utils.hexlify(400000) }]);
     callback();
   }
   async checkBalance() {
@@ -122,21 +147,20 @@ class Group {
 
 
 class UserGroups {
-  constructor(userUpalaId, signer, updater) {
+  constructor(userUpalaId, ethereumGateway, updater) {
     this.groups = {};
     this.userUpalaId = userUpalaId;
-    this.signer = signer;
+    this.ethereumGateway = ethereumGateway;
     this.updater = updater;
   }
   async addGroupAddress(address) {
     if (typeof this.groups[address] == "undefined") {
       try {
-        let newContract = new ethers.Contract(
-          address, 
-          require("./contracts/" + network + "/" + GROUP_ABI_FILE), 
-          this.signer
-        );
-        this.groups[address] = new Group(newContract);
+        console.log("addGroupAddress");
+        let abi = this.ethereumGateway.contracts[BASE_GROUP_CONTRACT_NAME].getABI();
+        // uses address as contract name
+        let newGroupContract = this.ethereumGateway.addContract(address, abi, address);
+        this.groups[address] = new Group(newGroupContract);
         await this.groups[address].loadDetails()
 
         // TODO hardcoded single layer hierarchy => make it multilayer (set paths somewhere above)
@@ -175,7 +199,7 @@ class UserGroups {
 // mainnetProvider is used for price discovery
 const mainnetProvider = new ethers.providers.InfuraProvider("mainnet",INFURA_ID);
 const localProvider = new ethers.providers.JsonRpcProvider(process.env.REACT_APP_PROVIDER?process.env.REACT_APP_PROVIDER:"http://localhost:8545");
-const smartContracts = new Contracts(network);
+const ethereumGateway = new EthereumGateway(network);
 
 var globalDAIContract;
 var userGroups;
@@ -196,28 +220,12 @@ function App() {
 
   useEffect(() => {
     async function initializeUserGroups(provider, userUpalaId) {
-      console.log("initializeUserGroups", provider, userUpalaId);
       if(typeof provider != "undefined" && typeof userUpalaId != "undefined")
       {
-        console.log("initializeUserGroups", provider, userUpalaId);
-        try{
-          //we need to check to see if this provider has a signer or not
-          //TODO move signer detection to Account component
-          let signer
-          let accounts = await provider.listAccounts()
-          if(accounts && accounts.length>0){
-            signer = provider.getSigner()
-          }else{
-            signer = provider
-          }
-          smartContracts.updateProvider(signer);
-          userGroups = new UserGroups(userUpalaId, signer, setLoadedGroups);
-          let preloadedGroupAddress = require("./contracts/" + network + "/" + "ProtoGroup.address.js");
-          userGroups.addGroupAddress(preloadedGroupAddress);
-
-        }catch(e){
-          console.log("ERROR LOADING CONTRACTS!!",e)
-        }
+        await ethereumGateway.updateProvider(provider);
+        userGroups = new UserGroups(userUpalaId, ethereumGateway, setLoadedGroups);
+        let preloadedGroupAddress = require("./contracts/" + network + "/" + "ProtoGroup.address.js");
+        userGroups.addGroupAddress(preloadedGroupAddress);
       }
     }
     initializeUserGroups(injectedProvider, userUpalaId)

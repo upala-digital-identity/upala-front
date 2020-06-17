@@ -7,7 +7,7 @@ export const membership_status =
     };
 export const upalaContractName = "Upala";
 export const daiContractName = "FakeDai";
-export const GROUP_ABI_FILE = "ProtoGroup.abi.js";
+export const BASE_GROUP_CONTRACT_NAME = "ProtoGroup";
 
 export const network = "localhost"; // options: localhost, kovan
 export const IS_SHIPPED = false;  // switches local provider to injected provider when true
