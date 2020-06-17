@@ -146,7 +146,7 @@ class Group {
 
 
 
-class UserGroups {
+class UpalaWallet {
   constructor(userUpalaId, ethereumGateway, updater) {
     this.groups = {};
     this.userUpalaId = userUpalaId;
@@ -173,7 +173,9 @@ class UserGroups {
       }
     }
   }
-
+  calculateMaxScore() {
+    
+  }
   updateUI(){
     let newLoadedGroups = {};
     for (var address in this.groups) {
@@ -195,6 +197,21 @@ class UserGroups {
   }
 }
 
+class UpalaID {
+  constructor(upalaContract, userAddress) {
+    this.upalaContract = upalaContract;
+    this.userAddress = userAddress;
+  }
+  changeManagingAddress(newAddress, callback) {
+    this.upalaContract.write("upadateManager", newAddress);
+  }
+  getUserUpalaID(){
+    this.upalaContract.read("myID", this.userAddress);
+  }
+  explode(path, callback){
+
+  }
+}
 
 // mainnetProvider is used for price discovery
 const mainnetProvider = new ethers.providers.InfuraProvider("mainnet",INFURA_ID);
@@ -219,16 +236,17 @@ function App() {
   globalDAIContract = contracts ? contracts[daiContractName] : null
 
   useEffect(() => {
-    async function initializeUserGroups(provider, userUpalaId) {
+    async function initializeUpalaWallet(provider, userUpalaId) {
       if(typeof provider != "undefined" && typeof userUpalaId != "undefined")
       {
         await ethereumGateway.updateProvider(provider);
-        userGroups = new UserGroups(userUpalaId, ethereumGateway, setLoadedGroups);
+        
+        userGroups = new UpalaWallet(userUpalaId, ethereumGateway, setLoadedGroups);
         let preloadedGroupAddress = require("./contracts/" + network + "/" + "ProtoGroup.address.js");
         userGroups.addGroupAddress(preloadedGroupAddress);
       }
     }
-    initializeUserGroups(injectedProvider, userUpalaId)
+    initializeUpalaWallet(injectedProvider, userUpalaId)
   },[injectedProvider, userUpalaId])
 
 
