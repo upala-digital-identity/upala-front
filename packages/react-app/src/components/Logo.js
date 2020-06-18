@@ -5,7 +5,7 @@ export default function Logo(props) {
   return (
     <div>
       <PageHeader
-        title="🔵 Upala user client"
+        title="🔵 Upala Wallet"
         subTitle="Price-of-forgery digital identity"
         style={{cursor:'pointer'}}
       />

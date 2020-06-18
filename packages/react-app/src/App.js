@@ -242,8 +242,11 @@ function App() {
         await ethereumGateway.updateProvider(provider);
         
         userGroups = new UpalaWallet(userUpalaId, ethereumGateway, setLoadedGroups);
-        let preloadedGroupAddress = require("./contracts/" + network + "/" + "ProtoGroup.address.js");
-        userGroups.addGroupAddress(preloadedGroupAddress);
+        // let preloadedGroupAddresses = require("./contracts/" + network + "/" + "ProtoGroup.address.js");
+        let preloadedGroupAddress = require("./contracts/" + network + "/groups.js")
+        userGroups.addGroupAddress(preloadedGroupAddress[0]);
+        userGroups.addGroupAddress(preloadedGroupAddress[1]);
+        userGroups.addGroupAddress(preloadedGroupAddress[2]);
       }
     }
     initializeUpalaWallet(injectedProvider, userUpalaId)
