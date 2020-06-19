@@ -42,12 +42,15 @@ export default function GroupDetails(props) {
   }
   return (
     <div>
-      <h2>{activeGroup.title}</h2>
+      <h2>{activeGroup.details.title}</h2>
       { displayScore }
-      <b>groupID:</b> {activeGroup.groupID} <br />
-      <b>membership_status:</b> {activeGroup.membership_status} <br />
-      <b>details:</b> {activeGroup.details} <br />
-      <b>group_address:</b> {activeGroup.group_address} <br />
+      <b>Group ID:</b> {activeGroup.groupID} ({activeGroup.membership_status}) <br />
+      <b>Address:</b> {activeGroup.group_address} <br />
+      <br />
+      <br />
+      {activeGroup.details.description} <br />
+      <br />
+      <br />
       { displayLinks }
     </div>
 

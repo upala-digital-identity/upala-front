@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import 'antd/dist/antd.css';
-import { daiContractName, membership_status, INFURA_ID, IS_SHIPPED, network, BASE_GROUP_CONTRACT_NAME } from "./config";
+import { upalaContractName, daiContractName, membership_status, INFURA_ID, IS_SHIPPED, network, BASE_GROUP_CONTRACT_NAME } from "./config";
 //import { gql } from "apollo-boost";
 import { ethers } from "ethers";
 //import { useQuery } from "@apollo/react-hooks";
@@ -89,10 +89,13 @@ class EthereumGateway {
 }
 
 class Group {
-  constructor(contract) {
-    // set defaults // TODO move to this.fields or similar
-    this.group_address = contract.address;  // The owner/manager of Upala group (address)
+  constructor(userUpalaId, contract, onFieldsChange) {
+    this.userUpalaId = userUpalaId;
     this.contract = contract;
+    // this.scoreLoader = scoreLoader;
+    this.fieldsChanged = onFieldsChange;
+    this.group_address = contract.address;  // The owner/manager of Upala group (address)
+    // defaults
     this.groupID = null; // Upala group ID (uint160)
     this.pool_address = null; // Address of a pool attached to the group
     this.details = null; // raw details string
@@ -100,40 +103,67 @@ class Group {
     this.membership_status = membership_status.NO_MEMBERSHIP; // JOINED if user_score > 0
     this.path = [];
   }
+
   setPath(newPath) {
     this.path = newPath;
   }
+
   async loadDetails(){
-      this.details = await this.contract.read("getGroupDetails");
+      this.details = JSON.parse(await this.contract.read("getGroupDetails"));
       this.groupID = (await this.contract.read("getUpalaGroupID")).toNumber();
       this.pool_address = await this.contract.read("getGroupPoolAddress");
-      // this.user_score = await this.loadUserScore();
-      // console.log("this.user_score", this.user_score);
+      
+      // TODO hardcoded single layer hierarchy => make it multilayer (set paths somewhere above)
+      this.setPath([this.userUpalaId, this.groupID]);
+
+      await this.loadUserScore();
+      console.log("this.user_score", this.user_score);
+      this.fieldsChanged();
   }
-  async join(userUpalaId, callback){
+
+  async join(userUpalaId){
     console.log("Join ", this.groupID);
     let result = await this.contract.write("join", [userUpalaId, { gasLimit: ethers.utils.hexlify(400000) }]);
     if (result) {
+      await this.loadUserScore();
       this.membership_status = membership_status.PENDING_JOIN;
-      callback();
+      this.fieldsChanged();
     }
   }
-  async loadUserScore() { //}, userAddress) {
-      // this.user_score = ethers.utils.formatEther(await this.contract.read("memberScore", [path, { from: userAddress }]));
-      // this.user_score = ethers.utils.formatEther(await this.contract.read("memberScore", [this.path]));
-      this.user_score = await this.contract.read("getScoreByPath", [this.path]);
+
+  async loadUserScore() {
+      let newUserScore = await this.contract.read("getScoreByPath", [this.path]);
+      if (newUserScore) {
+        this.user_score = ethers.utils.formatEther(newUserScore);
+        this.membership_status = membership_status.JOINED;
+      } else {
+        this.user_score = null;
+      }
   }
-  async explode(callback){
-    await this.contract.write("attack", [this.path, { gasLimit: ethers.utils.hexlify(400000) }]);
-    callback();
-  }
-  async checkBalance() {
+
+  async loadBalance() {
     if (globalDAIContract) {
       // globalDAIContract.balanceOf(this.pool_address);
       console.log("checkBalance");
       console.log("checkBalance", globalDAIContract.balanceOf(this.pool_address))
     }
   }
+
+  // newEntry["join_handler"] = () => this.groups[address].join(this.userUpalaId);
+  getFields(){
+    return {
+      "groupID": this.groupID,
+      "title": "Base group",
+      "membership_status": this.membership_status,
+      "details": this.details,
+      "group_address": this.group_address,
+      "user_score": null,
+      "short_description": "Base group short description",
+      "join_handler": () => this.join(this.userUpalaId),
+      "path": this.path,
+    }
+  }
+  
 
   // poolBalance = useContractReader(readContracts,daiContractName,"balanceOf",[props.poolAddress_hack],5000);
   // // userBalance = useContractReader(readContracts,daiContractName,"balanceOf",[props.address],5000);
@@ -153,25 +183,20 @@ class UpalaWallet {
     this.ethereumGateway = ethereumGateway;
     this.updater = updater;
   }
-  async addGroupAddress(address) {
+  async addGroupByAddress(address) {
     if (typeof this.groups[address] == "undefined") {
-      try {
-        console.log("addGroupAddress");
-        let abi = this.ethereumGateway.contracts[BASE_GROUP_CONTRACT_NAME].getABI();
-        // uses address as contract name
-        let newGroupContract = this.ethereumGateway.addContract(address, abi, address);
-        this.groups[address] = new Group(newGroupContract);
-        await this.groups[address].loadDetails()
-
-        // TODO hardcoded single layer hierarchy => make it multilayer (set paths somewhere above)
-        this.groups[address].setPath([this.userUpalaId, this.groups[address].groupID])
-
-        this.updateUI();
+      let abi = this.ethereumGateway.contracts[BASE_GROUP_CONTRACT_NAME].getABI();
+      // uses address as contract name
+      let newGroupContract = this.ethereumGateway.addContract(address, abi, address);
+      this.groups[address] = new Group(
+          this.userUpalaId, 
+          newGroupContract,
+          // (path) => 
+          //   this.ethereumGateway.contracts[upalaContractName].contractInstance.memberScore([11,6])
+          //   ,
+          () => this.updateUI());
+        await this.groups[address].loadDetails();
       }
-      catch (e) {
-        console.log("ERROR LOADING CONTRACTS!!", e);
-      }
-    }
   }
   calculateMaxScore() {
     
@@ -179,18 +204,7 @@ class UpalaWallet {
   updateUI(){
     let newLoadedGroups = {};
     for (var address in this.groups) {
-      // TODO warn: dublicates code in Contract class (create fields or smth. similar)
-      let newEntry = {
-        "groupID": this.groups[address].groupID,
-        "title": "Base group",
-        "membership_status": this.groups[address].membership_status,
-        "details": this.groups[address].details,
-        "group_address": address,
-        "user_score": null,
-        "short_description": "Base group short description",
-        "join_handler": () => this.groups[address].join(this.userUpalaId, () => this.updateUI()),
-        "path": this.groups[address].path,
-      }
+      let newEntry = this.groups[address].getFields();
       newLoadedGroups[address] = newEntry;
     }
     this.updater(newLoadedGroups);
@@ -241,12 +255,14 @@ function App() {
       {
         await ethereumGateway.updateProvider(provider);
         
-        userGroups = new UpalaWallet(userUpalaId, ethereumGateway, setLoadedGroups);
-        // let preloadedGroupAddresses = require("./contracts/" + network + "/" + "ProtoGroup.address.js");
-        let preloadedGroupAddress = require("./contracts/" + network + "/groups.js")
-        userGroups.addGroupAddress(preloadedGroupAddress[0]);
-        userGroups.addGroupAddress(preloadedGroupAddress[1]);
-        userGroups.addGroupAddress(preloadedGroupAddress[2]);
+        if (userUpalaId > 0) {
+          userGroups = new UpalaWallet(userUpalaId, ethereumGateway, setLoadedGroups);
+          // let preloadedGroupAddresses = require("./contracts/" + network + "/" + "ProtoGroup.address.js");
+          let preloadedGroupAddress = require("./contracts/" + network + "/groups.js")
+          userGroups.addGroupByAddress(preloadedGroupAddress[0]);
+          userGroups.addGroupByAddress(preloadedGroupAddress[1]);
+          userGroups.addGroupByAddress(preloadedGroupAddress[2]);
+        }
       }
     }
     initializeUpalaWallet(injectedProvider, userUpalaId)

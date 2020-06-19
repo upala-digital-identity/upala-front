@@ -15,7 +15,7 @@ export default function GroupsList(props) {
       selectedGroups.push(loadedGroups[id]);
     }
   }
-
+  
   if (selectedGroups) {
     return (
       <div>
@@ -26,8 +26,8 @@ export default function GroupsList(props) {
               <List.Item>
                 <List.Item.Meta
                   avatar={<Avatar src="https://i.imgur.com/SfYwuRJ.png" />}
-                  title={<a onClick={() => setactiveGroupID(item.group_address)}>{item.title} </a>}
-                  description={ item.short_description }
+                  title={<a onClick={() => setactiveGroupID(item.group_address)}>{ item.details.title } </a>}
+                  description={ item.details.short_description }
                 />
               </List.Item>
             )}
