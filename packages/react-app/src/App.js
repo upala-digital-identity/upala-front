@@ -117,15 +117,14 @@ class Group {
       this.setPath([this.userUpalaId, this.groupID]);
       console.log("setPath", this.userUpalaId, this.groupID)
       await this.loadUserScore();
-      this.fieldsChanged();
   }
 
   async join(userUpalaId){
     console.log("Join ", this.groupID);
     if ( await this.contract.write("join", [userUpalaId]) ) {
       this.membership_status = membership_status.PENDING_JOIN;
-      await this.loadUserScore();
-      this.fieldsChanged();
+      // TODO deal with the bug
+      setTimeout(()=>{ this.loadUserScore() }, 5000);  // dealing with some buidler local network bug
     }
   }
 
@@ -137,6 +136,7 @@ class Group {
       } else {
         this.user_score = null;
       }
+      this.fieldsChanged();
       console.log("loadUserScore", newUserScore);
   }
 
@@ -178,76 +178,89 @@ class Group {
 
 
 class UpalaWallet {
-  constructor(upalaProtocol, ethereumGateway, updater) {
+  constructor(ethereumGateway, userExporter, groupsExporter) {
     this.groups = {};
-    this.userUpalaId = upalaProtocol.user_ID;
+    // this.userUpalaId = upalaProtocol.user_ID;
     this.ethereumGateway = ethereumGateway;
-    this.updater = updater;
+    this.exportGroups = groupsExporter;
+
+    // this.userID = null;
+    this.upalaContract = ethereumGateway.contracts[upalaContractName];
+    this.exportUser = userExporter;
   }
+
+  async registerUser() {
+    let userAddress = await this.upalaContract.getSignerAddress();
+    if(await this.upalaContract.write("newIdentity", [userAddress])){
+      // TODO deal with the bug
+      setTimeout(()=>{ this.loadUserID() }, 2000);  // dealing with some buidler local network bug
+    }
+  }
+
+  async loadUserID() {
+    let userUpalaIdRaw = await this.upalaContract.read("myId");
+    if (userUpalaIdRaw) {
+      let newUserID = userUpalaIdRaw.toNumber();
+      if (newUserID >0 && newUserID != this.userID) {
+        this.userID = newUserID;
+        this.updateUser();
+        this.loadDefaultGroups();
+        console.log("new userID", this.userID);
+      }
+    }
+  }
+
+  async loadDefaultGroups() {
+    let preloadedGroupAddress = require("./contracts/" + network + "/groups.js")
+    this.addGroupByAddress(preloadedGroupAddress[0]);
+    this.addGroupByAddress(preloadedGroupAddress[1]);
+    this.addGroupByAddress(preloadedGroupAddress[2]);
+  }
+  
   async addGroupByAddress(address) {
     if (typeof this.groups[address] == "undefined") {
       let abi = this.ethereumGateway.contracts[BASE_GROUP_CONTRACT_NAME].getABI();
       // uses address as contract name
       let newGroupContract = this.ethereumGateway.addContract(address, abi, address);
       this.groups[address] = new Group(
-          this.userUpalaId,
+          this.userID,
           newGroupContract,
-          () => this.updateUI());
+          () => this.updateGroups());
         await this.groups[address].loadDetails();
       }
   }
-  calculateMaxScore() {
-    
-  }
-  updateUI(){
-    let newLoadedGroups = {};
-    for (var address in this.groups) {
-      let newEntry = this.groups[address].getFields();
-      newLoadedGroups[address] = newEntry;
-    }
-    this.updater(newLoadedGroups);
-  }
-}
 
-class UpalaProtocol {
-  constructor(upalaContract, onFieldsChange) {
-    this.upalaContract = upalaContract;
-    this.exportFields = onFieldsChange;
-    this.userID = null;
-  }
-  async registerID() {
-    let userAddress = await this.upalaContract.getSignerAddress();
-    if(await this.upalaContract.write("newIdentity", [userAddress])){
-      this.loadUserID();
-    }
+  calculateMaxScore() {
   }
   changeManagingAddress(newAddress) {
     this.upalaContract.write("upadateManager", newAddress);
-  }
-  async loadUserID(){
-    let userUpalaIdRaw = await this.upalaContract.read("myId");
-    if (userUpalaIdRaw) {
-      this.userID = userUpalaIdRaw.toNumber();
-    }
-    console.log("this.userID", this.userID);
-    this.updateFields();
   }
   loadGroupBalance(groupID){
   }
   loadUserScore(path){
   }
   explode(path){
-    this.upalaContract.write("explode", path);
+    this.upalaContract.write("attack", [path]);
   }
-  updateFields(){
-    console.log("update Upala fields")
-    let newFields = {
-      "user_ID": this.userID,
-      "register_handler": () => this.registerID()
+  
+  updateGroups(){
+    let newGroups = {};
+    for (var address in this.groups) {
+      let newEntry = this.groups[address].getFields();
+      newEntry["explode_handler"] = () => this.explode(newEntry["path"]);
+      newGroups[address] = newEntry;
     }
-    this.exportFields(newFields);
+    this.exportGroups(newGroups);
+  }
+  updateUser(){
+    console.log("update Upala fields")
+    let newUserID = {
+      "user_ID": this.userID
+    }
+    this.exportUser(newUserID);
   }
 }
+
 
 // mainnetProvider is used for price discovery
 const mainnetProvider = new ethers.providers.InfuraProvider("mainnet",INFURA_ID);
@@ -256,8 +269,8 @@ const ethereumGateway = new EthereumGateway(network);
 
 
 var globalDAIContract;
-var userGroups;
-var upalaProtocol;
+var upalaWallet;
+// var upalaProtocol;
 
 function App() {
 
@@ -267,56 +280,27 @@ function App() {
   const price = useExchangePrice(mainnetProvider);
   const gasPrice = useGasPrice("fast");
 
-  const [userUpalaId, setUserUpalaId] = useState();
+  const [userUpalaId, setUser] = useState();
   const [loadedGroups, setLoadedGroups] = useState();
 
 
   const contracts = useContractLoader(injectedProvider);
   globalDAIContract = contracts ? contracts[daiContractName] : null
 
-  async function initializeUpalaWallet() {
-    if (upalaProtocol.user_ID > 0) {
-      console.log("userUpalaId.user_ID", upalaProtocol.user_ID);
-      let preloadedGroupAddress = require("./contracts/" + network + "/groups.js")
-      userGroups.addGroupByAddress(preloadedGroupAddress[0]);
-      userGroups.addGroupByAddress(preloadedGroupAddress[1]);
-      userGroups.addGroupByAddress(preloadedGroupAddress[2]);
-    }
-  }
 
-  // TODO will not update on changing account in metamask
+
+  // TODO does not update on changing account in metamask
   useEffect(() => {
     async function initializeUpala(provider) {
       if(typeof provider != "undefined")
       {
         await ethereumGateway.updateProvider(provider);
-        upalaProtocol = new UpalaProtocol(ethereumGateway.contracts[upalaContractName], initializeUpalaWallet);
-        userGroups = new UpalaWallet(upalaProtocol, ethereumGateway, setLoadedGroups);
-        upalaProtocol.loadUserID();
+        upalaWallet = new UpalaWallet(ethereumGateway, setUser, setLoadedGroups);
+        upalaWallet.loadUserID();
       }
     }
     initializeUpala(injectedProvider)
   },[injectedProvider]);
-
-  // useEffect(() => {
-  //   async function initializeUpalaWallet(userUpalaId) {
-  //     if(typeof userUpalaId != "undefined" && typeof userUpalaId.user_ID != "undefined")
-  //     {
-  //       if (userUpalaId.user_ID > 0) {
-  //         console.log("userUpalaId.user_ID", userUpalaId.user_ID);
-  //         userGroups = new UpalaWallet(upalaProtocol, ethereumGateway, setLoadedGroups);
-  //         let preloadedGroupAddress = require("./contracts/" + network + "/groups.js")
-  //         userGroups.addGroupByAddress(preloadedGroupAddress[0]);
-  //         userGroups.addGroupByAddress(preloadedGroupAddress[1]);
-  //         userGroups.addGroupByAddress(preloadedGroupAddress[2]);
-  //       }
-  //     }
-  //   }
-  //   initializeUpalaWallet(userUpalaId)
-  // },[userUpalaId]);
-
-
-
 
 
   return (
@@ -365,7 +349,6 @@ function App() {
         { activeGroupID ? (
           <GroupDetails
             activeGroup = {loadedGroups[activeGroupID]}
-            injectedProvider={injectedProvider}
           />
           ) : ""
         }
@@ -374,13 +357,8 @@ function App() {
         <div>
           <div>
             <Welcome
-              address={address}
-              injectedProvider={injectedProvider}
-              localProvider={IS_SHIPPED ? injectedProvider : localProvider}
-              price={price}
-              gasPrice={gasPrice}
               userUpalaId={userUpalaId}
-              //setUserUpalaId={setUserUpalaId}
+              registerHandler={() => upalaWallet.registerUser()}
             />
           </div>
         </div>
