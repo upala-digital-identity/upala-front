@@ -38,8 +38,12 @@ class Contract {
     }
     return newValue;
   }
-  async write(functionName, args) {
-    return this.read(functionName, args);
+  async write(functionName, args, successCallback) {
+    let tx = await this.read(functionName, args);
+    console.log("sent");
+    if (tx) {
+      tx.wait().then(() => { successCallback();  console.log("mined"); });
+    }
   }
   getABI(){
     return this.abi;
@@ -121,10 +125,9 @@ class Group {
 
   async join(userUpalaId){
     console.log("Join ", this.groupID);
-    if ( await this.contract.write("join", [userUpalaId]) ) {
+    if ( await this.contract.write("join", [userUpalaId], () => this.loadUserScore()) ) {
       this.membership_status = membership_status.PENDING_JOIN;
-      // TODO deal with the bug
-      setTimeout(()=>{ this.loadUserScore() }, 5000);  // dealing with some buidler local network bug
+      this.fieldsChanged();
     }
   }
 
@@ -191,17 +194,14 @@ class UpalaWallet {
 
   async registerUser() {
     let userAddress = await this.upalaContract.getSignerAddress();
-    if(await this.upalaContract.write("newIdentity", [userAddress])){
-      // TODO deal with the bug
-      setTimeout(()=>{ this.loadUserID() }, 2000);  // dealing with some buidler local network bug
-    }
+    this.upalaContract.write("newIdentity", [userAddress], () => this.loadUserID());
   }
 
   async loadUserID() {
     let userUpalaIdRaw = await this.upalaContract.read("myId");
     if (userUpalaIdRaw) {
       let newUserID = userUpalaIdRaw.toNumber();
-      if (newUserID >0 && newUserID != this.userID) {
+      if (newUserID > 0 && newUserID != this.userID) {
         this.userID = newUserID;
         this.updateUser();
         this.loadDefaultGroups();
@@ -240,7 +240,7 @@ class UpalaWallet {
   loadUserScore(path){
   }
   explode(path){
-    this.upalaContract.write("attack", [path]);
+    this.upalaContract.write("attack", [path], () => console.log("EXPLODED"));
   }
   
   updateGroups(){
