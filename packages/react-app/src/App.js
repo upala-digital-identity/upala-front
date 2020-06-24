@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import 'antd/dist/antd.css';
-import { upalaContractName, daiContractName, membership_status, INFURA_ID, IS_SHIPPED, network, BASE_GROUP_CONTRACT_NAME } from "./config";
+import { upalaContractName, daiContractName, membershipStatus, INFURA_ID, IS_SHIPPED, network, BASE_GROUP_CONTRACT_NAME } from "./config";
 //import { gql } from "apollo-boost";
 import { ethers } from "ethers";
 //import { useQuery } from "@apollo/react-hooks";
@@ -96,58 +96,56 @@ class EthereumGateway {
 }
 
 class Group {
-  constructor(userUpalaId, contract, onFieldsChange) {
+  constructor(userUpalaId, contract, balanceChecker, onFieldsChange) {
     this.userUpalaId = userUpalaId;
     this.contract = contract;
-    // this.scoreLoader = scoreLoader;
-    this.fieldsChanged = onFieldsChange;
-    this.group_address = contract.address;  // The owner/manager of Upala group (address)
+    this.balanceChecker = balanceChecker;
+    this.updateFields = onFieldsChange;
+    this.groupAddress = contract.address;  // The owner/manager of Upala group (address)
     // defaults
     this.groupID = null; // Upala group ID (uint160)
-    this.pool_address = null; // Address of a pool attached to the group
+    this.poolAddress = null; // Address of a pool attached to the group
+    this.poolBalance = null;
     this.details = null; // raw details string
-    this.user_score = null; // user score in the group
-    this.membership_status = membership_status.NO_MEMBERSHIP; // JOINED if user_score > 0
+    this.userScore = null; // user score in the group
+    this.membershipStatus = membershipStatus.NO_MEMBERSHIP; // JOINED if userScore > 0
     this.path = [];
   }
 
   async loadDetails(){
-      console.log("loadDetails ");
       this.details = JSON.parse(await this.contract.read("getGroupDetails"));
       this.groupID = (await this.contract.read("getUpalaGroupID")).toNumber();
-      this.pool_address = await this.contract.read("getGroupPoolAddress");
-      
+      this.poolAddress = await this.contract.read("getGroupPoolAddress");
+      this.poolBalance = await this.loadPoolBalance();
       // TODO hardcoded single layer hierarchy => make it multilayer (set paths somewhere above)
       this.setPath([this.userUpalaId, this.groupID]);
-      console.log("setPath", this.userUpalaId, this.groupID)
       await this.loadUserScore();
   }
 
   async join(userUpalaId){
     console.log("Join ", this.groupID);
     if ( await this.contract.write("join", [userUpalaId], () => this.loadUserScore()) ) {
-      this.membership_status = membership_status.PENDING_JOIN;
-      this.fieldsChanged();
+      this.membershipStatus = membershipStatus.PENDING_JOIN;
+      this.updateFields();
     }
   }
 
   async loadUserScore() {
       let newUserScore = await this.contract.read("getScoreByPath", [this.path]);
       if (newUserScore) {
-        this.user_score = ethers.utils.formatEther(newUserScore);
-        this.membership_status = membership_status.JOINED;
+        this.userScore = ethers.utils.formatEther(newUserScore);
+        this.membershipStatus = membershipStatus.JOINED;
       } else {
-        this.user_score = null;
+        this.userScore = null;
       }
-      this.fieldsChanged();
+      this.updateFields();
       console.log("loadUserScore", newUserScore);
   }
 
-  async loadBalance() {
-    if (globalDAIContract) {
-      // globalDAIContract.balanceOf(this.pool_address);
-      console.log("checkBalance");
-      console.log("checkBalance", globalDAIContract.balanceOf(this.pool_address))
+  async loadPoolBalance() {
+    if (this.poolAddress) {
+      console.log("checkBalance", this.balanceChecker(this.poolAddress));
+      return this.balanceChecker(this.poolAddress);
     }
   }
 
@@ -158,23 +156,17 @@ class Group {
   getFields(){
     let newFields = {
       "groupID": this.groupID,
-      "membership_status": this.membership_status,
+      "membership_status": this.membershipStatus,
       "details": this.details,
-      "group_address": this.group_address,
-      "user_score": this.user_score,
+      "group_address": this.groupAddress,
+      "poolAddress": this.poolAddress,
+      "poolBalance": this.poolBalance,
+      "user_score": this.userScore,
       "path": this.path,
       "join_handler": () => this.join(this.userUpalaId),
     }
     return newFields;
   }
-  
-
-  // poolBalance = useContractReader(readContracts,daiContractName,"balanceOf",[props.poolAddress_hack],5000);
-  // // userBalance = useContractReader(readContracts,daiContractName,"balanceOf",[props.address],5000);
-
-  // let displayPoolBalance = poolBalance?ethers.utils.formatEther(poolBalance):"Loading...";
-  // let displayUserBalance = userBalance?ethers.utils.formatEther(userBalance):"Loading...";
-
 }
 
 
@@ -216,15 +208,24 @@ class UpalaWallet {
     this.addGroupByAddress(preloadedGroupAddress[1]);
     this.addGroupByAddress(preloadedGroupAddress[2]);
   }
+
+  async getBalance(address) {
+    let bal = await this.ethereumGateway.contracts[daiContractName].read("balanceOf", [address]);
+    if (bal) {
+      return ethers.utils.formatEther(bal);
+    }
+  }
   
   async addGroupByAddress(address) {
     if (typeof this.groups[address] == "undefined") {
       let abi = this.ethereumGateway.contracts[BASE_GROUP_CONTRACT_NAME].getABI();
+      
       // uses address as contract name
       let newGroupContract = this.ethereumGateway.addContract(address, abi, address);
       this.groups[address] = new Group(
           this.userID,
           newGroupContract,
+          (poolAddress) => this.getBalance(poolAddress),
           () => this.updateGroups());
         await this.groups[address].loadDetails();
       }
@@ -253,7 +254,6 @@ class UpalaWallet {
     this.exportGroups(newGroups);
   }
   updateUser(){
-    console.log("update Upala fields")
     let newUserID = {
       "user_ID": this.userID
     }
@@ -326,21 +326,21 @@ function App() {
           <h3>Suggestions:</h3>
           <GroupsList
             loadedGroups={loadedGroups}
-            statusFilter={membership_status.NO_MEMBERSHIP}
+            statusFilter={membershipStatus.NO_MEMBERSHIP}
             setactiveGroupID={setactiveGroupID}
           />
 
           <h3>Pending:</h3>
           <GroupsList
             loadedGroups={loadedGroups}
-            statusFilter={membership_status.PENDING_JOIN}
+            statusFilter={membershipStatus.PENDING_JOIN}
             setactiveGroupID={setactiveGroupID}
           />
 
           <h3>Joined:</h3>
           <GroupsList
             loadedGroups={loadedGroups}
-            statusFilter={membership_status.JOINED}
+            statusFilter={membershipStatus.JOINED}
             setactiveGroupID={setactiveGroupID}
           />
 

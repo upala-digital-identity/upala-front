@@ -26,7 +26,7 @@ export default function GroupDetails(props) {
   if (activeGroup.user_score) {
     displayScore = (
       <div>
-        <b>user_score:</b> 
+        <b>Your score:</b> 
         <h3>{activeGroup.user_score} DAI</h3>
       </div>
     )
@@ -35,10 +35,13 @@ export default function GroupDetails(props) {
     <div>
       <h2>{activeGroup.details.title}</h2>
       { displayScore }
-      <b>Group ID:</b> {activeGroup.groupID} ({activeGroup.membership_status}) <br />
-      <b>Address:</b> {activeGroup.group_address} <br />
+      <b>Group details:</b><br />
+      <b>Upala ID:</b> {activeGroup.groupID} ({activeGroup.membership_status}) <br />
+      <b>Managing contract:</b> {activeGroup.group_address} <br />
+      <b>Pool:</b> {activeGroup.poolAddress} <br />
+      <b>Balance:</b> {activeGroup.poolBalance} DAI <br />
       <br />
-      <br />
+      <b>Description:</b><br />
       {activeGroup.details.description} <br />
       <br />
       <br />
