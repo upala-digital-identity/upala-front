@@ -26,7 +26,7 @@ export default function GroupDetails(props) {
   if (activeGroup.user_score) {
     displayScore = (
       <div>
-        <b>Your score:</b> 
+        <b>Your score in Bladerunner:</b> 
         <h3>{activeGroup.user_score} DAI</h3>
       </div>
     )

@@ -112,13 +112,13 @@ class Group {
     this.path = [];
   }
 
-  async loadDetails(){
+  async loadDetails(bladeRunnerID){
       this.details = JSON.parse(await this.contract.read("getGroupDetails"));
       this.groupID = (await this.contract.read("getUpalaGroupID")).toNumber();
       this.poolAddress = await this.contract.read("getGroupPoolAddress");
       this.poolBalance = await this.loadPoolBalance();
-      // TODO hardcoded single layer hierarchy => make it multilayer (set paths somewhere above)
-      this.setPath([this.userUpalaId, this.groupID]);
+      // TODO hardcoded hierarchy for bladerunner => make it multilayer (set paths somewhere above)
+      this.setPath([this.userUpalaId, this.groupID, bladeRunnerID]);
       await this.loadUserScore();
   }
 
@@ -204,9 +204,14 @@ class UpalaWallet {
 
   async loadDefaultGroups() {
     let preloadedGroupAddress = require("./contracts/" + network + "/groups.js")
-    this.addGroupByAddress(preloadedGroupAddress[0]);
-    this.addGroupByAddress(preloadedGroupAddress[1]);
-    this.addGroupByAddress(preloadedGroupAddress[2]);
+
+    // bladeRunner TODO maybe create different adding procedure for score providers
+    let randomGroupID_hack = 1232;
+    const bladerunnerID = await(this.addGroupByAddress(preloadedGroupAddress[3], randomGroupID_hack));
+
+    const group1ID = await(this.addGroupByAddress(preloadedGroupAddress[0], bladerunnerID));
+    const group2ID = await(this.addGroupByAddress(preloadedGroupAddress[1], bladerunnerID));
+    const group3ID = await(this.addGroupByAddress(preloadedGroupAddress[2], bladerunnerID));
   }
 
   async getBalance(address) {
@@ -216,7 +221,7 @@ class UpalaWallet {
     }
   }
   
-  async addGroupByAddress(address) {
+  async addGroupByAddress(address, bladerunnerID) { // bladeRunnerID is a temporary hack TODO
     if (typeof this.groups[address] == "undefined") {
       let abi = this.ethereumGateway.contracts[BASE_GROUP_CONTRACT_NAME].getABI();
       
@@ -227,7 +232,8 @@ class UpalaWallet {
           newGroupContract,
           (poolAddress) => this.getBalance(poolAddress),
           () => this.updateGroups());
-        await this.groups[address].loadDetails();
+      await this.groups[address].loadDetails(bladerunnerID);  // bladeRunnerID is a temporary hack TODO 
+      return this.groups[address].groupID;
       }
   }
 

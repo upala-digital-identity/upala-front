@@ -1,1 +1,1 @@
-module.exports = ["SmartContractWallet","Upala","FakeDai","BasicPoolFactory","ProtoGroup","ProtoGroup","ProtoGroup","UBIExampleDApp"]
+module.exports = ["Upala","FakeDai","BasicPoolFactory","ProtoGroup","ProtoGroup","ProtoGroup","BladerunnerDAO","UBIExampleDApp"]
