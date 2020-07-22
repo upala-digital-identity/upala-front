@@ -26,4 +26,4 @@ yarn-debug.log*
 yarn-error.log*
 
 # secretes
-packages/react-app/src/secrets.js
+# packages/react-app/src/secrets.js
