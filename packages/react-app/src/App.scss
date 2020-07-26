@@ -1,0 +1,45 @@
+@import url("https://fonts.googleapis.com/css?family=Josefin+Sans:100,300,400,600,700|Roboto:100,200,300,400,500,600");
+@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;0,300;0,400;0,600;0,700;0,800;0,900;1,200;1,300;1,400;1,600;1,700;1,800;1,900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300;0,400;0,500;0,700;0,900;1,300;1,400;1,500;1,700;1,900&display=swap");
+:root {
+  --headlinesFont: "Rubik", sans-serif;
+  --appNameFont: "Nunito", sans-serif;
+  --bodyFont: "Rubik", sans-serif;
+  --textColor: #323232;
+  --bodyBg: #c7c7c7;
+  --whiteColor: #fff;
+  --grey1Color: #ebebeb;
+  --grey2Color: #c6c6c6;
+  --grey3Color: #787878;
+  --grey4Color: #525252;
+  --grey5Color: #3a3a3a;
+  --blackColor: #000;
+  --themeColor: #6314ff;
+  --themeColorDark: #4600d3;
+  --yellowColor: #ffc700;
+  --themeColorHover: rgba(255, 255, 255, 0.1);
+  --labelColor: rgba(255, 255, 255, 0.5);
+  --active: #008c73;
+  --activeDark: rgb(0, 14, 28);
+  --deActive: rgb(240, 37, 37);
+}
+
+.App {
+  width: 414px;
+  height: 98%;
+  max-height: 736px !important;
+  border-radius: 10px;
+  z-index: 1;
+  position: relative;
+  background-color: #fff;
+  box-sizing: border-box;
+  overflow-y: auto;
+  color: var(--textColor);
+  font-family: var(--bodyFont);
+  position: relative;
+}
+
+.menu {
+  width: 380px;
+  float: left;
+}

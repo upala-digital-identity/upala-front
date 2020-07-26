@@ -1,0 +1,37 @@
+.group-info {
+  .group-info-header {
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+
+    .group-info-header-menu {
+      display: flex;
+      align-items: center;
+      margin-left: 1rem;
+      color: var(--grey2Color);
+      cursor: pointer;
+    }
+
+    .group-info-header-logo {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      .logo {
+        font-size: 1.6rem !important;
+        font-weight: 800;
+      }
+    }
+
+    .group-info-header-search {
+      display: flex;
+      align-items: center;
+      margin-right: 1rem;
+      color: var(--grey2Color);
+      cursor: pointer;
+    }
+  }
+
+  .group-info-body-container {
+    min-height: 688px;
+  }
+}
