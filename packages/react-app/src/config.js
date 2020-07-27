@@ -1,4 +1,4 @@
-export const membership_status = {
+export const membershipStatus = {
   NO_MEMBERSHIP: "NO_MEMBERSHIP",
   PENDING_JOIN: "PENDING_JOIN",
   PENDING_LEAVE: "PENDING_LEAVE",
@@ -22,7 +22,7 @@ export const GROUP_DEFAULTS = {
   title: null, // extracted from details
   short_description: null, // extracted from details
   user_score: null, // user score in the group
-  membership_status: membership_status.NO_MEMBERSHIP, // JOINED if user_score > 0
+  membership_status: membershipStatus.NO_MEMBERSHIP, // JOINED if user_score > 0
 };
 
 const tempActiveGroupID1 = 111111;
@@ -33,7 +33,7 @@ const testData = {
   [tempActiveGroupID1]: {
     groupID: tempActiveGroupID1,
     title: "Group 1",
-    membership_status: membership_status.NO_MEMBERSHIP,
+    membership_status: membershipStatus.NO_MEMBERSHIP,
     details: "Group 1 details",
     group_address: "0x0",
     user_score: null,
@@ -42,7 +42,7 @@ const testData = {
   [tempActiveGroupID2]: {
     groupID: tempActiveGroupID2,
     title: "Group 2",
-    membership_status: membership_status.NO_MEMBERSHIP,
+    membership_status: membershipStatus.NO_MEMBERSHIP,
     details: "Group 2 details",
     group_address: "0x0",
     user_score: null,
@@ -51,7 +51,7 @@ const testData = {
   [tempActiveGroupID3]: {
     groupID: tempActiveGroupID3,
     title: "Group 3",
-    membership_status: membership_status.NO_MEMBERSHIP,
+    membership_status: membershipStatus.NO_MEMBERSHIP,
     details: "Group 3 details",
     group_address: "0x0",
     user_score: null,

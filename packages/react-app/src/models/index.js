@@ -1,8 +1,9 @@
 import {
   upalaContractName,
-  membership_status,
+  membershipStatus,
   network,
   BASE_GROUP_CONTRACT_NAME,
+  daiContractName,
 } from "../config";
 //import { gql } from "apollo-boost";
 import { ethers } from "ethers";
@@ -109,29 +110,31 @@ export class EthereumGateway {
 }
 
 class Group {
-  constructor(userUpalaId, contract, onFieldsChange) {
+  constructor(userUpalaId, contract, balanceChecker, onFieldsChange) {
     this.userUpalaId = userUpalaId;
     this.contract = contract;
-    // this.scoreLoader = scoreLoader;
-    this.fieldsChanged = onFieldsChange;
-    this.group_address = contract.address; // The owner/manager of Upala group (address)
+    this.balanceChecker = balanceChecker;
+    this.updateFields = onFieldsChange;
+    this.groupAddress = contract.address; // The owner/manager of Upala group (address)
     // defaults
     this.groupID = null; // Upala group ID (uint160)
-    this.pool_address = null; // Address of a pool attached to the group
+    this.poolAddress = null; // Address of a pool attached to the group
+    this.poolBalance = null;
     this.details = null; // raw details string
-    this.user_score = null; // user score in the group
-    this.membership_status = membership_status.NO_MEMBERSHIP; // JOINED if user_score > 0
+    this.userScore = null; // user score in the group
+    this.membershipStatus = membershipStatus.NO_MEMBERSHIP; // JOINED if userScore > 0
     this.path = [];
   }
 
-  async loadDetails() {
+  async loadDetails(bladeRunnerID) {
     // console.log("loadDetails ");
     this.details = JSON.parse(await this.contract.read("getGroupDetails"));
     this.groupID = (await this.contract.read("getUpalaGroupID")).toNumber();
-    this.pool_address = await this.contract.read("getGroupPoolAddress");
+    this.poolAddress = await this.contract.read("getGroupPoolAddress");
+    this.poolBalance = await this.loadPoolBalance();
 
-    // TODO hardcoded single layer hierarchy => make it multilayer (set paths somewhere above)
-    this.setPath([this.userUpalaId, this.groupID]);
+    // TODO hardcoded hierarchy for bladerunner => make it multilayer (set paths somewhere above)
+    this.setPath([this.userUpalaId, this.groupID, bladeRunnerID]);
     // console.log("setPath", this.userUpalaId, this.groupID);
     await this.loadUserScore();
   }
@@ -143,31 +146,27 @@ class Group {
         this.loadUserScore()
       )
     ) {
-      this.membership_status = membership_status.PENDING_JOIN;
-      this.fieldsChanged();
+      this.membershipStatus = membershipStatus.PENDING_JOIN;
+      this.updateFields();
     }
   }
 
   async loadUserScore() {
     let newUserScore = await this.contract.read("getScoreByPath", [this.path]);
     if (newUserScore) {
-      this.user_score = ethers.utils.formatEther(newUserScore);
-      this.membership_status = membership_status.JOINED;
+      this.userScore = ethers.utils.formatEther(newUserScore);
+      this.membershipStatus = membershipStatus.JOINED;
     } else {
-      this.user_score = null;
+      this.userScore = null;
     }
-    this.fieldsChanged();
+    this.updateFields();
     // console.log("loadUserScore", newUserScore);
   }
 
-  async loadBalance(globalDAIContract) {
-    if (globalDAIContract) {
-      // globalDAIContract.balanceOf(this.pool_address);
-      // console.log("checkBalance");
-      console.log(
-        "checkBalance",
-        globalDAIContract.balanceOf(this.pool_address)
-      );
+  async loadPoolBalance() {
+    if (this.poolAddress) {
+      console.log("checkBalance", this.balanceChecker(this.poolAddress));
+      return this.balanceChecker(this.poolAddress);
     }
   }
 
@@ -178,10 +177,12 @@ class Group {
   getFields() {
     let newFields = {
       groupID: this.groupID,
-      membership_status: this.membership_status,
+      membership_status: this.membershipStatus,
       details: this.details,
-      group_address: this.group_address,
-      user_score: this.user_score,
+      group_address: this.groupAddress,
+      poolAddress: this.poolAddress,
+      poolBalance: this.poolBalance,
+      user_score: this.userScore,
       path: this.path,
       join_handler: () => this.join(this.userUpalaId),
     };
@@ -248,13 +249,37 @@ export class UpalaWallet {
     let preloadedGroupAddress = require("../contracts/" +
       network +
       "/groups.js");
-    console.log(preloadedGroupAddress);
-    this.addGroupByAddress(preloadedGroupAddress[0]);
-    this.addGroupByAddress(preloadedGroupAddress[1]);
-    this.addGroupByAddress(preloadedGroupAddress[2]);
+    // bladeRunner TODO maybe create different adding procedure for score providers
+    let randomGroupID_hack = 1232;
+    const bladerunnerID = await this.addGroupByAddress(
+      preloadedGroupAddress[3],
+      randomGroupID_hack
+    );
+    const group1ID = await this.addGroupByAddress(
+      preloadedGroupAddress[0],
+      bladerunnerID
+    );
+    const group2ID = await this.addGroupByAddress(
+      preloadedGroupAddress[1],
+      bladerunnerID
+    );
+    const group3ID = await this.addGroupByAddress(
+      preloadedGroupAddress[2],
+      bladerunnerID
+    );
   }
 
-  async addGroupByAddress(address) {
+  async getBalance(address) {
+    let bal = await this.ethereumGateway.contracts[
+      daiContractName
+    ].read("balanceOf", [address]);
+    if (bal) {
+      return ethers.utils.formatEther(bal);
+    }
+  }
+
+  async addGroupByAddress(address, bladerunnerID) {
+    // bladeRunnerID is a temporary hack TODO
     if (typeof this.groups[address] === "undefined") {
       let abi = this.ethereumGateway.contracts[
         BASE_GROUP_CONTRACT_NAME
@@ -265,10 +290,14 @@ export class UpalaWallet {
         abi,
         address
       );
-      this.groups[address] = new Group(this.userID, newGroupContract, () =>
-        this.updateGroups()
+      this.groups[address] = new Group(
+        this.userID,
+        newGroupContract,
+        (poolAddress) => this.getBalance(poolAddress),
+        () => this.updateGroups()
       );
-      await this.groups[address].loadDetails();
+      await this.groups[address].loadDetails(bladerunnerID); // bladeRunnerID is a temporary hack TODO
+      return this.groups[address].groupID;
     }
   }
 

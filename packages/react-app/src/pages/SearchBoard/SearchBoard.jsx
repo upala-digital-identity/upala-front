@@ -3,7 +3,7 @@ import { ArrowLeft } from "react-feather";
 import "./SearchBoard.scss";
 import { useHistory } from "react-router-dom";
 import { StateContext } from "../../hooks";
-import { membership_status } from "../../config";
+import { membershipStatus } from "../../config";
 import { GroupsList } from "../../components/groups";
 export default function SearchBoard(props) {
   const history = useHistory();
@@ -67,7 +67,7 @@ export default function SearchBoard(props) {
         <div className="search-board-groups-title">Suggestions</div>
         <GroupsList
           loadedGroups={filteredGroups}
-          statusFilter={[membership_status.NO_MEMBERSHIP]}
+          statusFilter={[membershipStatus.NO_MEMBERSHIP]}
           setActiveGroupID={setActiveGroupID}
         />
       </div>

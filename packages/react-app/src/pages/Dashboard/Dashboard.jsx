@@ -9,12 +9,7 @@ import { UpalaWallet, EthereumGateway } from "../../models";
 import { ethers } from "ethers";
 import Loader from "react-loader-spinner";
 
-import {
-  membership_status,
-  INFURA_ID,
-  IS_SHIPPED,
-  network,
-} from "../../config";
+import { membershipStatus, INFURA_ID, IS_SHIPPED, network } from "../../config";
 import { useExchangePrice, ActionContext, StateContext } from "../../hooks";
 
 // mainnetProvider is used for price discovery
@@ -202,8 +197,8 @@ export default function Dashboard(props) {
               <GroupsList
                 loadedGroups={allGroups}
                 statusFilter={[
-                  membership_status.JOINED,
-                  membership_status.PENDING_JOIN,
+                  membershipStatus.JOINED,
+                  membershipStatus.PENDING_JOIN,
                 ]}
                 setActiveGroupID={setActiveGroupID}
               />

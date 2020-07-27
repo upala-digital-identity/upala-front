@@ -1,6 +1,6 @@
 import React from "react";
 import { Check } from "react-feather";
-import { membership_status } from "../../../config";
+import { membershipStatus } from "../../../config";
 import "./GroupsList.scss";
 
 // Shows groups list filtered by status
@@ -60,19 +60,18 @@ export default function GroupsList(props) {
                   </div>
                 </div>
                 <div className="group-list-item-action">
-                  {group.membership_status === membership_status.JOINED ? (
+                  {group.membership_status === membershipStatus.JOINED ? (
                     <span className="group-list-item-action-check">
                       <Check height={16} width={16} />
                     </span>
                   ) : null}
-                  {group.membership_status ===
-                  membership_status.PENDING_JOIN ? (
+                  {group.membership_status === membershipStatus.PENDING_JOIN ? (
                     <span className="group-list-item-action-pending">
                       Pending
                     </span>
                   ) : null}
-                  {group.membership_status ===
-                  membership_status.NO_MEMBERSHIP ? (
+                  {group.membership_status === membershipStatus.NO_MEMBERSHIP &&
+                  group.details.title !== "BladerunnerDAO" ? (
                     <button
                       className="group-list-item-action-join"
                       onClick={group.join_handler}
