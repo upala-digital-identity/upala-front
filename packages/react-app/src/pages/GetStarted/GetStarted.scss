@@ -1,0 +1,44 @@
+.get-started {
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(135.53deg, #7200ff 0%, #384aff 100%);
+  .get-started-header {
+    min-height: 250px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff !important;
+    .logo {
+      font-size: 2.5rem !important;
+    }
+  }
+
+  .get-started-content {
+    font-size: 2rem;
+    margin-left: 2rem;
+    margin-right: 2rem;
+    color: #fff;
+    text-align: center;
+    min-height: 236px;
+    display: flex;
+    align-items: center;
+  }
+
+  .get-started-button-container {
+    min-height: 250px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .get-started-button {
+      background-color: #fff;
+      border-radius: 3rem;
+      padding: 8px 3rem;
+      border: 0px;
+      color: var(--themeColor);
+      font-size: 1.2rem;
+      cursor: pointer;
+      outline: none;
+    }
+  }
+}

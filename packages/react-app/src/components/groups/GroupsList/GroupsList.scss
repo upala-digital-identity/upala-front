@@ -1,0 +1,93 @@
+.group-list {
+  .group-list-container {
+    display: flex;
+    flex-direction: column;
+    .group-list-item {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      padding: 6px 1rem;
+      border-bottom: 1px solid rgba(160, 160, 160, 0.2);
+      cursor: pointer;
+      &:hover {
+        background-color: var(--grey1Color);
+      }
+      .group-list-item-body {
+        display: flex;
+        align-items: center;
+        flex: 1;
+        .group-list-item-avatar {
+          width: 48px;
+          height: 48px;
+          border-radius: 50%;
+        }
+
+        .group-list-item-details {
+          flex: 1;
+          margin-left: 1rem;
+          .group-list-item-details-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+          }
+          .group-list-item-details-member {
+            color: var(--grey3Color);
+          }
+        }
+      }
+
+      .group-list-item-action {
+        .group-list-item-action-check {
+          border-radius: 50%;
+          background: #384aff;
+          color: var(--whiteColor);
+          display: flex;
+          padding: 3px;
+        }
+        .group-list-item-action-pending {
+          border-radius: 14px;
+          background-color: #dce2ff;
+          color: #384aff;
+          padding: 4px 1rem;
+          font-size: 14px;
+          font-weight: 500;
+          letter-spacing: 0;
+          line-height: 17px;
+          text-align: center;
+        }
+        .group-list-item-action-join {
+          border-radius: 14px;
+          background: linear-gradient(135.53deg, #384aff 0%, #7200ff 100%);
+          color: var(--whiteColor);
+          border: 0;
+          padding: 6px 1rem;
+          font-size: 14px;
+          font-weight: 500;
+          letter-spacing: 0;
+          line-height: 17px;
+          text-align: center;
+          cursor: pointer;
+          outline: none;
+          &:hover {
+            background: linear-gradient(135.53deg, #1d31ff 0%, #4900a4 100%);
+          }
+        }
+      }
+    }
+
+    .empty-list-container {
+      padding: 1rem;
+      .empty-list-icon-container {
+        text-align: center;
+        .empty-list-icon {
+          height: 48px;
+          width: 48px;
+        }
+      }
+      .empty-list-text {
+        color: var(--grey3Color);
+        text-align: center;
+        font-size: 16px;
+      }
+    }
+  }
+}

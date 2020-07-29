@@ -1,0 +1,99 @@
+.group-details {
+  .group-details-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem;
+
+    .group-details-avatar {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+    }
+
+    .group-details-title {
+      margin-top: 1rem;
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+
+    .group-details-address {
+      text-align: center;
+    }
+
+    .group-details-description {
+      margin-top: 1rem;
+      color: var(--grey3Color);
+      text-align: center;
+    }
+
+    .group-details-action {
+      margin-top: 2rem;
+      .group-details-action-container {
+        border-radius: 24px;
+        background-color: #dce2ff;
+        color: #384aff;
+        padding: 6px 1rem;
+        font-size: 1rem;
+        font-weight: 500;
+        letter-spacing: 0;
+        line-height: 17px;
+        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-transform: capitalize;
+      }
+
+      .group-details-action-check {
+        border-radius: 50%;
+        background: #384aff;
+        color: var(--whiteColor);
+        display: flex;
+        padding: 3px;
+        margin-left: 0.4rem;
+      }
+
+      .group-details-action-join {
+        border-radius: 24px;
+        background: linear-gradient(135.53deg, #384aff 0%, #7200ff 100%);
+        color: var(--whiteColor);
+        border: 0;
+        padding: 8px 2rem;
+        font-size: 1rem;
+        font-weight: 500;
+        letter-spacing: 0;
+        line-height: 17px;
+        text-align: center;
+        cursor: pointer;
+        outline: none;
+        &:hover {
+          background: linear-gradient(135.53deg, #1d31ff 0%, #4900a4 100%);
+        }
+      }
+
+      .group-details-action-explode {
+        margin-top: 1rem;
+        border-radius: 24px;
+        background: var(--deActive);
+        color: var(--whiteColor);
+        border: 0;
+        padding: 8px 2rem;
+        font-size: 1rem;
+        font-weight: 500;
+        letter-spacing: 0;
+        line-height: 17px;
+        text-align: center;
+        cursor: pointer;
+        outline: none;
+        min-width: 114px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        &:hover {
+          background: darken($color: rgb(240, 37, 37), $amount: 10);
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,106 @@
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  .dashboard-header {
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+
+    .dashboard-header-menu {
+      display: flex;
+      align-items: center;
+      margin-left: 1rem;
+      color: var(--grey2Color);
+      cursor: pointer;
+    }
+
+    .dashboard-header-logo {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      .logo {
+        font-size: 1.6rem !important;
+        font-weight: 800;
+      }
+    }
+
+    .dashboard-header-search {
+      display: flex;
+      align-items: center;
+      margin-right: 1rem;
+      color: var(--grey2Color);
+      cursor: pointer;
+    }
+  }
+
+  .dashboard-body-container {
+    min-height: 688px;
+    .dashboard-loader-container {
+      min-height: 688px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .dashboard-register-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 688px;
+      .get-started-content {
+        font-size: 1.5rem;
+        margin-left: 2rem;
+        margin-right: 2rem;
+        margin-bottom: 2rem;
+        color: var(--themeColorDark);
+        text-align: center;
+        display: flex;
+        align-items: center;
+      }
+      .get-started-button {
+        background-color: var(--themeColor);
+        border-radius: 3rem;
+        padding: 8px 3rem;
+        border: 0px;
+        color: var(--whiteColor);
+        font-size: 1.2rem;
+        cursor: pointer;
+        outline: none;
+      }
+    }
+  }
+  .dashboard-score-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 177px;
+    background: linear-gradient(135.53deg, #384aff 0%, #7200ff 100%);
+    color: #fff;
+    align-items: center;
+    justify-content: center;
+
+    .dashboard-score-text {
+      font-size: 1.2rem;
+    }
+    .dashboard-score-amount {
+      font-size: 3rem;
+    }
+  }
+
+  .dashboard-groups-container {
+    min-height: 511px;
+    overflow-y: auto;
+    .dashboard-groups-title {
+      height: 42px;
+      width: 100%;
+      background-color: rgba(160, 160, 160, 0.05);
+      display: flex;
+      align-items: center;
+      border: 1px solid rgba(160, 160, 160, 0.2);
+      font-size: 1.2rem;
+      padding-left: 1rem;
+      color: var(--grey3Color);
+      font-weight: 500;
+    }
+  }
+}
