@@ -48,7 +48,6 @@ export default function GroupDetails(props) {
   //     </div>
   //   );
   // }
-  console.log(activeGroup);
   return (
     <div className="group-details">
       {/* <h2>{activeGroup.details.title}</h2>
