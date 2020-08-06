@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter as Router, Route, Redirect } from "react-router-dom";
+import { HashRouter as Router, Route, Redirect } from "react-router-dom";
 import { GetStarted, Dashboard, SearchBoard, GroupInfo } from "./pages";
 import "./App.scss";
 import "antd/dist/antd.css";

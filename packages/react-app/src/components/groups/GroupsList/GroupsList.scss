@@ -6,7 +6,7 @@
       display: flex;
       flex-direction: row;
       align-items: center;
-      padding: 6px 1rem;
+      padding: 12px 1rem;
       border-bottom: 1px solid rgba(160, 160, 160, 0.2);
       cursor: pointer;
       &:hover {
@@ -70,6 +70,11 @@
           &:hover {
             background: linear-gradient(135.53deg, #1d31ff 0%, #4900a4 100%);
           }
+        }
+
+        .group-list-item-user-score {
+          font-weight: bold;
+          font-size: 1.1rem;
         }
       }
     }

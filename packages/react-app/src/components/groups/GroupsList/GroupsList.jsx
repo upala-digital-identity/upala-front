@@ -12,12 +12,18 @@ export default function GroupsList(props) {
 
   let selectedGroups = [];
   for (let id in loadedGroups) {
-    const isStatusFilterPresent =
-      statusFilter.filter(
-        (status) => loadedGroups[id].membership_status === status
-      ).length > 0;
-    if (isStatusFilterPresent) {
-      selectedGroups.push(loadedGroups[id]);
+    if (props.isBladeRunner) {
+      if (loadedGroups[id].details.title === "BladerunnerDAO") {
+        selectedGroups.push(loadedGroups[id]);
+      }
+    } else {
+      const isStatusFilterPresent =
+        statusFilter.filter(
+          (status) => loadedGroups[id].membership_status === status
+        ).length > 0;
+      if (isStatusFilterPresent) {
+        selectedGroups.push(loadedGroups[id]);
+      }
     }
   }
 
@@ -68,6 +74,11 @@ export default function GroupsList(props) {
                   {group.membership_status === membershipStatus.PENDING_JOIN ? (
                     <span className="group-list-item-action-pending">
                       Pending
+                    </span>
+                  ) : null}
+                  {props.isBladeRunner ? (
+                    <span className="group-list-item-user-score">
+                      {props.userScore} DAI
                     </span>
                   ) : null}
                   {group.membership_status === membershipStatus.NO_MEMBERSHIP &&
