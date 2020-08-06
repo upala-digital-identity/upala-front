@@ -111,7 +111,8 @@ export class EthereumGateway {
 
 class Group {
   constructor(userUpalaId, contract, balanceChecker, onFieldsChange) {
-    this.userUpalaId = userUpalaId;
+    // TODO add Group ID to the constructor. Must be known before creating this instance. 
+    this.userUpalaId = userUpalaId; // TODO remove. Let smart contract load user id from Upala by msg.sender.
     this.contract = contract;
     this.balanceChecker = balanceChecker;
     this.updateFields = onFieldsChange;
@@ -126,16 +127,19 @@ class Group {
     this.path = [];
   }
 
-  async loadDetails(bladeRunnerID) {
-    // console.log("loadDetails ");
-    this.details = JSON.parse(await this.contract.read("getGroupDetails"));
+  // TODO should be checked from Upala itself. 
+  // Move this func to addGroupByAddress func or similar up the hierarchy
+  async loadGroupID() {
     this.groupID = (await this.contract.read("getUpalaGroupID")).toNumber();
+    return this.groupID;
+  }
+
+  async loadDetails() {
+    // console.log("loadDetails ");
+    if (!this.groupID) {await this.loadGroupID()}
+    this.details = JSON.parse(await this.contract.read("getGroupDetails"));
     this.poolAddress = await this.contract.read("getGroupPoolAddress");
     this.poolBalance = await this.loadPoolBalance();
-
-    // TODO hardcoded hierarchy for bladerunner => make it multilayer (set paths somewhere above)
-    this.setPath([this.userUpalaId, this.groupID, bladeRunnerID]);
-    // console.log("setPath", this.userUpalaId, this.groupID);
     await this.loadUserScore();
   }
 
@@ -206,6 +210,7 @@ export class UpalaWallet {
     // this.userID = null;
     this.upalaContract = ethereumGateway.contracts[upalaContractName];
     this.exportUser = userExporter;
+    this.BLADERUNNER_ID = 4;
   }
 
   async registerUser(setLoader) {
@@ -235,7 +240,8 @@ export class UpalaWallet {
       if (newUserID > 0 && newUserID !== this.userID) {
         this.userID = newUserID;
         this.updateUser(setLoader);
-        this.loadDefaultGroups();
+        this.loadDefaultGroups(this.userID);
+        this.loadPaths();
         // console.log("new userID", this.userID);
       } else {
         setLoader(false);
@@ -245,29 +251,23 @@ export class UpalaWallet {
     }
   }
 
-  async loadDefaultGroups() {
-    let preloadedGroupAddress = require("../contracts/" +
-      network +
-      "/groups.js");
-    // bladeRunner TODO maybe create different adding procedure for score providers
-    let randomGroupID_hack = 1232;
-    const bladerunnerID = await this.addGroupByAddress(
-      preloadedGroupAddress[3],
-      randomGroupID_hack
-    );
-    const group1ID = await this.addGroupByAddress(
-      preloadedGroupAddress[0],
-      bladerunnerID
-    );
-    const group2ID = await this.addGroupByAddress(
-      preloadedGroupAddress[1],
-      bladerunnerID
-    );
-    const group3ID = await this.addGroupByAddress(
-      preloadedGroupAddress[2],
-      bladerunnerID
-    );
+  async loadDefaultGroups(userID) {
+    this.addGroupByID(1, [userID, 1, 4]);
+    this.addGroupByID(2, [userID, 2, 4]);
+    this.addGroupByID(3, [userID, 3, 4]);
+    this.addGroupByID(4);
   }
+
+  // paths omit user ID
+  async loadPaths() {
+    return [
+      [1,4],
+      [2,4],
+      [3,4],
+    ]
+  }
+
+  storePaths(paths) {}
 
   async getBalance(address) {
     let bal = await this.ethereumGateway.contracts[
@@ -278,7 +278,36 @@ export class UpalaWallet {
     }
   }
 
-  async addGroupByAddress(address, bladerunnerID) {
+  // ID - Group's Upala ID
+  async addGroupByID(ID, membershipPath = []) {
+    // hardcoded group
+    // Bladerunner is always 4 for now. Other groups are constant as well
+    // for every contracts deployment, let's use it for now
+    let groupAddress;
+    let preloadedGroupAddress = require("../contracts/" +
+      network +
+      "/groups.js");
+    if (ID == 1) { 
+      groupAddress = preloadedGroupAddress[0];
+    }
+    if (ID == 2) { 
+      groupAddress = preloadedGroupAddress[1];
+    }
+    if (ID == 3) { 
+      groupAddress = preloadedGroupAddress[2];
+    }
+    if (ID == 4) { 
+      groupAddress = preloadedGroupAddress[3];
+    }
+
+    // how really the function works:
+    // try to retrieve group address from Upala
+    // let groupAddress = this.upalaContract.read("getAddress", ID);
+
+    this.addGroupByAddress(groupAddress, membershipPath);
+  }
+
+  async addGroupByAddress(address, membershipPath = []) {
     // bladeRunnerID is a temporary hack TODO
     if (typeof this.groups[address] === "undefined") {
       let abi = this.ethereumGateway.contracts[
@@ -290,16 +319,27 @@ export class UpalaWallet {
         abi,
         address
       );
+      // TODO newGroupContract.isUpala == true ?
       this.groups[address] = new Group(
         this.userID,
         newGroupContract,
         (poolAddress) => this.getBalance(poolAddress),
         () => this.updateGroups()
       );
-      await this.groups[address].loadDetails(bladerunnerID); // bladeRunnerID is a temporary hack TODO
+      // TODO hardcoded hierarchy for bladerunner => make it multilayer (set paths somewhere above)
+      if (membershipPath.length > 0) {
+        this.groups[address].setPath(membershipPath);
+      } else {
+        let newGroupID = await this.groups[address].loadGroupID();
+        this.groups[address].setPath([this.userID, newGroupID, this.BLADERUNNER_ID]);
+      }
+      
+      await this.groups[address].loadDetails();
       return this.groups[address].groupID;
     }
   }
+
+  async addGroup(userID, groupID, groupContract) {}
 
   calculateMaxScore() {}
   changeManagingAddress(newAddress) {

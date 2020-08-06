@@ -76,7 +76,21 @@ export default function Dashboard(props) {
     history.push("/groups/details/" + groupId);
   };
 
-  console.log(allGroups);
+  let displayUserID = "Not registered";
+  if (userUpalaId && userUpalaId.user_ID) {
+    displayUserID = userUpalaId.user_ID;
+  }
+
+  let joinedGroup = null;
+  for (let id in allGroups) {
+    const isStatusFilterPresent =
+      allGroups[id].membership_status === membershipStatus.JOINED;
+    if (isStatusFilterPresent) {
+      joinedGroup = allGroups[id];
+      break;
+    }
+  }
+
   return (
     <div className="dashboard">
       {/* <header>
@@ -188,10 +202,10 @@ export default function Dashboard(props) {
           </div>
         ) : userUpalaId ? (
           <>
-            {/* <div className="dashboard-score-container">
-              <span className="dashboard-score-text">Your max. score is</span>
-              <span className="dashboard-score-amount">15 DAI</span>
-            </div> */}
+            <div className="dashboard-score-container">
+              <span className="dashboard-score-text">Your Upala Id is</span>
+              <span className="dashboard-score-amount">{displayUserID}</span>
+            </div>
             <div className="dashboard-groups-container">
               <div className="dashboard-groups-title">Groups</div>
               <GroupsList
@@ -202,12 +216,18 @@ export default function Dashboard(props) {
                 ]}
                 setActiveGroupID={setActiveGroupID}
               />
-              {/* <div className="dashboard-groups-title">Paths</div>
-              <GroupsList
-                loadedGroups={allGroups}
-                statusFilter={membership_status.PENDING_JOIN}
-                setActiveGroupID={setActiveGroupID}
-              /> */}
+              {joinedGroup && (
+                <>
+                  <div className="dashboard-groups-title">Score</div>
+                  <GroupsList
+                    loadedGroups={allGroups}
+                    statusFilter={[membershipStatus.NO_MEMBERSHIP]}
+                    isBladeRunner={true}
+                    userScore={joinedGroup.user_score}
+                    setActiveGroupID={setActiveGroupID}
+                  />
+                </>
+              )}
             </div>
           </>
         ) : (

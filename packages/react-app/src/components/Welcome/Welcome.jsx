@@ -1,7 +1,6 @@
-import React from 'react'
+import React from "react";
 
 export default function Welcome(props) {
-
   const userUpalaId = props.userUpalaId;
   const registerHandler = props.registerHandler;
 
@@ -10,9 +9,12 @@ export default function Welcome(props) {
   }
 
   let displayUserID = "Not registered";
-  if (typeof userUpalaId != "undefined" && typeof userUpalaId.user_ID != "undefined") {
+  if (
+    typeof userUpalaId != "undefined" &&
+    typeof userUpalaId.user_ID != "undefined"
+  ) {
     displayUserID = userUpalaId.user_ID;
-    console.log("displayUserID", displayUserID)
+    console.log("displayUserID", displayUserID);
   }
 
   return (
@@ -21,11 +23,11 @@ export default function Welcome(props) {
       <br />
       <br />
       <br />
-      <h1>🔵</h1> 
+      {/* eslint-disable-next-line jsx-a11y/accessible-emoji */}
+      <h1>🔵</h1>
       Your Upala Id is: <h1>{displayUserID}</h1>
-      <a onClick={ () => register() }>Register new Upala Id</a> <br />
-
+      {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
+      <a onClick={() => register()}>Register new Upala Id</a> <br />
     </div>
   );
-
 }
