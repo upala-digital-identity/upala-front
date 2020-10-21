@@ -101,6 +101,12 @@ module.exports = {
         mnemonic: "**SOME MNEMONIC**"
       },*/
     },
+    rinkeby: {
+      url: 'https://rinkeby.infura.io/v3/2717afb6bf164045b5d5468031b93f87',
+      /*accounts: {
+        mnemonic: "**SOME MNEMONIC**"
+      },*/
+    },
   },
   solc: {
     version : "0.6.6",
