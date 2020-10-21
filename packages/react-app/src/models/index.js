@@ -110,10 +110,11 @@ export class EthereumGateway {
 }
 
 class Group {
-  constructor(userUpalaId, contract, balanceChecker, onFieldsChange) {
+  constructor(userUpalaId, contract, scoreChecker, balanceChecker, onFieldsChange) {
     // TODO add Group ID to the constructor. Must be known before creating this instance. 
     this.userUpalaId = userUpalaId; // TODO remove. Let smart contract load user id from Upala by msg.sender.
     this.contract = contract;
+    this.scoreChecker = scoreChecker;
     this.balanceChecker = balanceChecker;
     this.updateFields = onFieldsChange;
     this.groupAddress = contract.address; // The owner/manager of Upala group (address)
@@ -155,7 +156,8 @@ class Group {
     }
   }
 
-  async loadUserScore() {
+  // depricated
+  async _loadUserScore() {
     let newUserScore = await this.contract.read("getScoreByPath", [this.path]);
     if (newUserScore) {
       this.userScore = ethers.utils.formatEther(newUserScore);
@@ -166,6 +168,20 @@ class Group {
     this.updateFields();
     // console.log("loadUserScore", newUserScore);
   }
+
+  async loadUserScore() {
+    let newUserScore = await this.scoreChecker(this.path);
+    if (newUserScore) {
+      this.userScore = ethers.utils.formatEther(newUserScore);
+      this.membershipStatus = membershipStatus.JOINED;
+    } else {
+      this.userScore = null;
+    }
+    this.updateFields();
+    // console.log("loadUserScore", newUserScore);
+  }
+
+  
 
   async loadPoolBalance() {
     if (this.poolAddress) {
@@ -273,10 +289,17 @@ export class UpalaWallet {
     let bal = await this.ethereumGateway.contracts[
       daiContractName
     ].read("balanceOf", [address]);
+    console.log("balanceOf", bal);
     if (bal) {
       return ethers.utils.formatEther(bal);
     }
   }
+
+  async getUserScore(path) {
+    let score = await this.upalaContract.read("myScore", [path]);
+    return score;
+  }
+
 
   // ID - Group's Upala ID
   async addGroupByID(ID, membershipPath = []) {
@@ -323,6 +346,7 @@ export class UpalaWallet {
       this.groups[address] = new Group(
         this.userID,
         newGroupContract,
+        (path) => this.getUserScore(path),
         (poolAddress) => this.getBalance(poolAddress),
         () => this.updateGroups()
       );
