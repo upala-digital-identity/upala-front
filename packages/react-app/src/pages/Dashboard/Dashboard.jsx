@@ -10,7 +10,7 @@ import { ethers } from "ethers";
 import Loader from "react-loader-spinner";
 
 import { membershipStatus, INFURA_ID, IS_SHIPPED, network } from "../../config";
-import { useExchangePrice, ActionContext, StateContext } from "../../hooks";
+import { ActionContext, StateContext } from "../../hooks";
 
 // mainnetProvider is used for price discovery
 const mainnetProvider = new ethers.providers.InfuraProvider(
@@ -40,7 +40,7 @@ export default function Dashboard(props) {
   const [injectedProvider, setInjectedProvider] = useState();
   const [loading, setLoading] = useState(true);
   const [registerLoading, setRegisterLoading] = useState(false);
-  const price = useExchangePrice(mainnetProvider);
+  const price = 380;
   // const gasPrice = useGasPrice("fast");
 
   // const [userUpalaId, setUserUpalaId] = useState();

@@ -7,6 +7,10 @@ import {
 } from "../config";
 //import { gql } from "apollo-boost";
 import { ethers } from "ethers";
+import { abis, addresses, groups } from "@project/contracts";
+
+const chainID = 0;
+
 export class Contract {
   constructor(abi, address = "0x0") {
     this.abi = abi;
@@ -67,23 +71,10 @@ export class EthereumGateway {
   constructor(network) {
     this.contracts = {};
     this.signer = null;
-    try {
-      let contractList = require("../contracts/" + network + "/contracts.js");
-      for (let c in contractList) {
-        let address = require("../contracts/" +
-          network +
-          "/" +
-          contractList[c] +
-          ".address.js");
-        let abi = require("../contracts/" +
-          network +
-          "/" +
-          contractList[c] +
-          ".abi.js");
-        this.contracts[contractList[c]] = new Contract(abi, address);
-      }
-    } catch (e) {
-      console.log("ERROR LOADING DEFAULT CONTRACTS!!", e);
+    for (const [contractName, abi] of Object.entries(abis)) {
+      this.contracts[contractName] = new Contract(
+        abi, 
+        addresses[chainID][contractName]);
     }
   }
   async updateProvider(provider) {
@@ -307,20 +298,18 @@ export class UpalaWallet {
     // Bladerunner is always 4 for now. Other groups are constant as well
     // for every contracts deployment, let's use it for now
     let groupAddress;
-    let preloadedGroupAddress = require("../contracts/" +
-      network +
-      "/groups.js");
+
     if (ID == 1) { 
-      groupAddress = preloadedGroupAddress[0];
+      groupAddress = groups[chainID].MetaCartel;
     }
     if (ID == 2) { 
-      groupAddress = preloadedGroupAddress[1];
+      groupAddress = groups[chainID].MolochDAO;
     }
     if (ID == 3) { 
-      groupAddress = preloadedGroupAddress[2];
+      groupAddress = groups[chainID].MetaGame;
     }
     if (ID == 4) { 
-      groupAddress = preloadedGroupAddress[3];
+      groupAddress = groups[chainID].BladerunnerDAO;
     }
 
     // how really the function works:

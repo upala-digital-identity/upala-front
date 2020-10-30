@@ -1,11 +1,17 @@
-import erc20 from "./abis/erc20";
-import exchange from "./abis/exchange";
-import factory from "./abis/factory";
-import token from "./abis/token";
+import Upala from "./abis/Upala.json";
+import FakeDai from "./abis/FakeDai.json";
+import BasicPoolFactory from "./abis/BasicPoolFactory.json";
+import ProtoGroup from "./abis/ProtoGroup.json";
+import BladerunnerDAO from "./abis/BladerunnerDAO.json";
+import UBIExampleDApp from "./abis/UBIExampleDApp.json";
 
-export default {
-  erc20,
-  exchange,
-  factory,
-  token,
-};
+const abis = {
+  Upala: Upala,
+  FakeDai: FakeDai,
+  BasicPoolFactory: BasicPoolFactory,
+  ProtoGroup: ProtoGroup,
+  BladerunnerDAO: BladerunnerDAO,
+  UBIExampleDApp: UBIExampleDApp,
+}; 
+
+export default abis;

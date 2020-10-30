@@ -1,0 +1,9 @@
+const addresses = {
+  Upala: "0x78Ee8Fb9fE5abD5e347Fc94c2fb85596d1f60e3c",
+  FakeDai: "0x920d847fE49E54C19047ba8bc236C45A8068Bca7",
+  BasicPoolFactory: "0xA4765Ff72A9F3CfE73089bb2c3a41B838DF71574",
+  ProtoGroup: "0x0459c841b02Aee8730730C737582c53B20a27288",
+  BladerunnerDAO: "0x33958cC3535Fc328369EAC2B2Bebd120D67C7fa1",
+  UBIExampleDApp: "0xAa7BC1924711B77A0F3Aaebdd550BfeDDDbaf3cd",
+};
+export default addresses;

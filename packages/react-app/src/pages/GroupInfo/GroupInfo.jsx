@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { ArrowLeft } from "react-feather";
 import "./GroupInfo.scss";
 import { useHistory, useParams } from "react-router-dom";
-import { StateContext, useExchangePrice, ActionContext } from "../../hooks";
+import { StateContext, ActionContext } from "../../hooks";
 import { IS_SHIPPED, INFURA_ID } from "../../config";
 import { Logo, Account } from "../../components";
 import { ethers } from "ethers";
@@ -27,7 +27,7 @@ export default function GroupInfo() {
   const { loadUserAddress } = React.useContext(ActionContext);
   // const [address, setAddress] = useState();
   const [injectedProvider, setInjectedProvider] = useState();
-  const price = useExchangePrice(mainnetProvider);
+  const price = 380;
 
   const selectedGroup = allGroups[id];
 

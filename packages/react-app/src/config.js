@@ -8,7 +8,7 @@ export const upalaContractName = "Upala";
 export const daiContractName = "FakeDai";
 export const BASE_GROUP_CONTRACT_NAME = "ProtoGroup";
 
-export const network = "rinkeby"; // options: localhost, kovan, rinkeby
+export const network = "localhost"; // options: localhost, kovan, rinkeby
 export const IS_SHIPPED = true; // switches local provider to injected provider when true
 
 const secrets = require("./secrets.js");
