@@ -68,15 +68,11 @@ export class Contract {
 
 // moving all Ethereum interaction into this class (substitute for contractLoader, contractReader)
 export class EthereumGateway {
-  constructor(network) {
+  constructor() {
     this.contracts = {};
     this.signer = null;
-    for (const [contractName, abi] of Object.entries(abis)) {
-      this.contracts[contractName] = new Contract(
-        abi, 
-        addresses[chainID][contractName]);
-    }
   }
+
   async updateProvider(provider) {
     let signer;
     let accounts = await provider.listAccounts();
@@ -86,13 +82,21 @@ export class EthereumGateway {
       signer = provider;
     }
     this.signer = signer;
-    this.initializeAllContracts();
+    var chainID = (await provider.getNetwork()).chainId;
+    if (addresses[chainID] == undefined) {
+      console.log("Unable to find addresses for the provided chain id. Switching to localhost");
+      chainID = 0;
+    }
+    console.log("chainID", this.chainID)
+    this.addAllContracts(chainID);
   }
-  initializeAllContracts() {
-    for (let c in this.contracts) {
-      this.contracts[c].initialize(this.signer);
+
+  addAllContracts(chainID) {
+    for (const [contractName, abi] of Object.entries(abis)) {
+      this.addContract(contractName, abi, addresses[chainID][contractName]);
     }
   }
+
   addContract(contractName, abi, address) {
     this.contracts[contractName] = new Contract(abi, address);
     this.contracts[contractName].initialize(this.signer);

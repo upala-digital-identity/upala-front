@@ -22,7 +22,7 @@ const localProvider = new ethers.providers.JsonRpcProvider(
     ? process.env.REACT_APP_PROVIDER
     : "http://localhost:8545"
 );
-const ethereumGateway = new EthereumGateway(network);
+const ethereumGateway = new EthereumGateway();
 
 var upalaWallet;
 // var upalaProtocol;
