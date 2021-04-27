@@ -1,3 +1,7 @@
 const addresses = {
+  MetaCartel: "0xC56a94cB177B297A9f4fe11781CE4E2eD1829f8B",
+  MolochDAO: "0x96e1a4E0B18d3A0A6f6e4d9ece32b2D986F2EB67",
+  MetaGame: "0x46bC737df7f1B3a7436F942813498CBE041a6ea4",
+  BladerunnerDAO: "0x019F12a7DAa44A34CD0FF35055b0e2D4679D8521",
 };
 export default addresses;

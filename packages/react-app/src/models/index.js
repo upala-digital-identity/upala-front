@@ -84,7 +84,7 @@ export class EthereumGateway {
     this.signer = signer;
     var chainID = (await provider.getNetwork()).chainId;
     if (addresses[chainID] == undefined) {
-      console.log("Unable to find addresses for the provided chain id. Switching to localhost");
+      console.log("Unable to find addresses for the provided chain id:",chainID,". Switching to localhost");
       chainID = 0;
     }
     console.log("chainID", this.chainID)
@@ -167,7 +167,7 @@ class Group {
   async loadUserScore() {
     let newUserScore = await this.scoreChecker(this.path);
     if (newUserScore) {
-      this.userScore = ethers.utils.formatEther(newUserScore);
+      this.userScore = Math.round(ethers.utils.formatEther(newUserScore));
       this.membershipStatus = membershipStatus.JOINED;
     } else {
       this.userScore = null;
@@ -245,6 +245,7 @@ export class UpalaWallet {
 
   async loadUserID(setLoader) {
     let userUpalaIdRaw = await this.upalaContract.read("myId");
+    console.log("userUpalaIdRaw", userUpalaIdRaw);
     console.log("Enter user", userUpalaIdRaw);
     if (userUpalaIdRaw) {
       let newUserID = userUpalaIdRaw.toNumber();
@@ -307,10 +308,10 @@ export class UpalaWallet {
       groupAddress = groups[chainID].MetaCartel;
     }
     if (ID == 2) { 
-      groupAddress = groups[chainID].MolochDAO;
+      groupAddress = groups[chainID].Githubers;
     }
     if (ID == 3) { 
-      groupAddress = groups[chainID].MetaGame;
+      groupAddress = groups[chainID].BNB_Holders;
     }
     if (ID == 4) { 
       groupAddress = groups[chainID].BladerunnerDAO;
@@ -323,6 +324,7 @@ export class UpalaWallet {
     this.addGroupByAddress(groupAddress, membershipPath);
   }
 
+  // WARNING!! One addres my in the future manage several groups
   async addGroupByAddress(address, membershipPath = []) {
     // bladeRunnerID is a temporary hack TODO
     if (typeof this.groups[address] === "undefined") {

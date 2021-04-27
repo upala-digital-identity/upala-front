@@ -5,7 +5,7 @@ import { ethers } from "ethers";
 // import BurnerProvider from 'burner-provider';
 import Web3Modal from "web3modal";
 import { Address } from "..";
-import { usePoller, useContractLoader } from "../../hooks";
+import { usePoller } from "../../hooks";
 // import { useContractReader } from "../../hooks";
 
 import WalletConnectProvider from "@walletconnect/web3-provider";
